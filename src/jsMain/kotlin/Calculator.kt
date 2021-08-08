@@ -6,29 +6,27 @@ import react.RComponent
 import react.RProps
 import react.RState
 import react.dom.attrs
+import react.dom.button
 import react.dom.div
 import react.dom.input
 import react.dom.p
 
 external interface WelcomeProps : RProps {
-    var name: String
+    var azMortality: Double
 }
 
 data class WelcomeState(val name: String) : RState
 
 @JsExport
-class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(props) {
+class CalculatorPage(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(props) {
 
     init {
-        state = WelcomeState(props.name)
+        state = WelcomeState(props.azMortality.toString())
     }
 
     override fun RBuilder.render() {
         div {
-            +"Hello111, ${state.name}"
-            p {
-                +"11AAqqq"
-            }
+            +"T"
         }
         input {
             attrs {
@@ -38,6 +36,13 @@ class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(prop
                     setState(
                         WelcomeState(name = (event.target as HTMLInputElement).value)
                     )
+                }
+            }
+        }
+        div {
+            button {
+                p {
+                    +"Submit"
                 }
             }
         }

@@ -5,9 +5,9 @@ import kotlinx.browser.window
 fun main() {
     window.onload = {
         render(document.getElementById("root")) {
-            child(Welcome::class) {
+            child(CalculatorPage::class) {
                 attrs {
-                    name = "Kotlin/JS"
+                    azMortality = 0.5f
                 }
             }
         }

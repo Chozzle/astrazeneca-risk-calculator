@@ -6,18 +6,17 @@ data class Vaccine(
     val name: String,
     val ageToHospitalizationChance: Map<Int, Double>,
     val mortality: Double,
-    val effectiveness: Float,
-    val hospitalizationEffectiveness: Float,
-    val deathEffectiveness: Float
+    val effectiveness: Double,
+    val hospitalizationEffectiveness: Double,
+    val mortalityEffectiveness: Double
 ) {
-    fun riskReduction(risk: Risk) : Risk {
-
-    }
+    val riskReduction: Risk = Risk(1 - mortalityEffectiveness, 1 - hospitalizationEffectiveness)
 }
 
 data class Risk(val mortality: Double, val hospitalization: Double) {
     operator fun plus(other: Risk): Risk = Risk(mortality + other.mortality, hospitalization + other.mortality)
     operator fun minus(other: Risk): Risk = Risk(mortality - other.mortality, hospitalization - other.mortality)
+    operator fun times(other: Risk): Risk = Risk(mortality * other.mortality, hospitalization * other.mortality)
 }
 
 enum class Gender { MALE, FEMALE, UNSPECIFIED }
@@ -25,10 +24,10 @@ enum class Gender { MALE, FEMALE, UNSPECIFIED }
 data class CitizenContext(
     val age: Int,
     val gender: Gender,
-    val vaccineEvent: Vaccine,
-    val comparisonVaccineEvent: Vaccine,
+    val vaccineForNow: Vaccine,
+    val vaccineForFutureComparison: Vaccine,
     val timeUntilVaccine: Duration,
-    val timeUntilComparisonVaccine: Duration,
+    val timeUntilFutureComparisonVaccine: Duration,
     val virusEnvironment: VirusEnvironment
 )
 
@@ -47,19 +46,30 @@ data class Virus(
 data class Scenario(val citizenContext: CitizenContext, val virusEnvironment: VirusEnvironment)
 
 /**
- * UI Like this... per 100,000
- * AZ:
- *      🏥 Caused <---> Saved
- *    ️  ️ Caused <---> Saved 🙅🏻‍
- *
- * Pfizer:
- *        Caused <---> Saved 🙅🏻‍🙅🏻
- *      ️ Caused <---> Saved 🙅🏻‍🙅🏻
+ * People aren't that concerned about a little side effect, so focus on hospitalizations and deaths.
+ *  Display this first for context of REDUCING the bad outcomes
+ *  Should I get vaccine or not (ever)?
  *
  * No vaccine:
- *      🏥🏥🏥🏥🏥
- *      ☠️☠️☠️
+ *     🏥🏥🏥🏥🏥🏥🏥🏥🏥
+ *  ️  ☠☠☠☠
  *
+ * User wants to know: Should I get AZ or wait for Pfizer?
+ * Can display YES/NO (with see your GP disclaimer)
+ * But by how much degree is it YES/NO?
+ *
+ *
+ * UI Like this... per 100,000
+ * Your scenario:               Medium exposure risk:           High exposure risk:
+ * AZ now:
+ *    🏥🏥
+ *  ️ ☠
+ *
+ * Wait for Pfizer:
+ *    🏥🏥🏥
+ *  ️ ☠
+ *
+ * Show comparison to risky activities like skydiving?
  * */
 data class ScenarioOutcome(val vaccineOutcome: Risk, val comparisonVaccineOutcome: Risk)
 
@@ -69,33 +79,34 @@ data class ScenarioOutcome(val vaccineOutcome: Risk, val comparisonVaccineOutcom
 // region Calculations
 
 fun calculateScenarioOutcome(citizenContext: CitizenContext, virusEnvironment: VirusEnvironment): ScenarioOutcome {
-
-    val vaccineEventRisk = calculateVaccineRisk(age = citizenContext.age, vaccine = citizenContext.vaccineEvent)
-    val comparisonVaccineEventRisk = calculateVaccineRisk(
-        age = citizenContext.age,
-        vaccine = citizenContext.comparisonVaccineEvent
-    )
-
-    val durationBetweenVaccineEvents = citizenContext.timeUntilComparisonVaccine - citizenContext.timeUntilVaccine
+    val virusMortality = virusEnvironment.virus.ageToMortality[citizenContext.age]!!
+    val virusHospitalizationChance = virusEnvironment.virus.ageToHospitalizationChance[citizenContext.age]!!
+    val durationBetweenVaccineEvents = citizenContext.timeUntilFutureComparisonVaccine - citizenContext.timeUntilVaccine
     val chanceOfPositiveWhileWaiting = calculateCitizenPositiveChance(
         citizenContext.virusEnvironment,
         durationBetweenVaccineEvents
     )
-
-    val virusMortality = virusEnvironment.virus.ageToMortality[citizenContext.age]!!
-    val virusHospitalizationChance = virusEnvironment.virus.ageToHospitalizationChance[citizenContext.age]!!
 
     val chanceOfDeathWhileWaiting = chanceOfPositiveWhileWaiting * virusMortality
     val chanceOfHospitalizationWhileWaiting = chanceOfPositiveWhileWaiting * virusHospitalizationChance
     val waitingRisk = Risk(mortality = chanceOfDeathWhileWaiting, hospitalization = chanceOfHospitalizationWhileWaiting)
 
 
-    val vaccineReward = (1 - citizenContext.vaccineEvent.effectiveness) *
-    val comparisonVaccineReward = 1 - citizenContext.comparisonVaccineEvent.effectiveness
+    val vaccineEventRisk = calculateVaccineRisk(age = citizenContext.age, vaccine = citizenContext.vaccineForNow)
+    val virusRiskWhileVaccinatedUpToComparisonEnd = waitingRisk * citizenContext.vaccineForNow.riskReduction
 
-    val comparisonVaccineOutcome = comparisonVaccineEventRisk + waitingRisk
-    return ScenarioOutcome(vaccineOutcome = vaccineEventRisk, comparisonVaccineOutcome = comparisonVaccineOutcome)
+
+    val comparisonVaccineEventRisk = calculateVaccineRisk(
+        age = citizenContext.age,
+        vaccine = citizenContext.vaccineForFutureComparison
+    )
+
+    val vaccinatedOutcome = vaccineEventRisk + virusRiskWhileVaccinatedUpToComparisonEnd
+    val comparisonVaccinatedOutcome = comparisonVaccineEventRisk + waitingRisk
+    return ScenarioOutcome(vaccineOutcome = vaccinatedOutcome, comparisonVaccineOutcome = comparisonVaccinatedOutcome)
 }
+
+fun calculateNoVaccineRisk(age: Int, virus: Virus) = Risk(mortality = virus.ageToMortality[age]!!, hospitalization = virus.ageToHospitalizationChance[age]!!)
 
 fun calculateCitizenPositiveChance(environment: VirusEnvironment, duration: Duration): Double {
     // Basic homogenous calculation for now

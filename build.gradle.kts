@@ -1,5 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.5.10"
+    kotlin("multiplatform") version "1.5.21"
+    id("org.jetbrains.compose") version "1.0.0-alpha1"
     application
 }
 
@@ -7,8 +8,10 @@ group = "io.github.chozzle"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    jcenter()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    google()
     mavenCentral()
+    jcenter()
 }
 
 kotlin {
@@ -21,11 +24,15 @@ kotlin {
         }
         withJava()
     }
-    js(LEGACY) {
+    js(IR) {
         binaries.executable()
         browser {
             commonWebpackConfig {
                 cssSupport.enabled = true
+            }
+
+            distribution {
+                directory = file("$projectDir/distribution/public")
             }
         }
     }
@@ -49,6 +56,9 @@ kotlin {
         val jvmTest by getting
         val jsMain by getting {
             dependencies {
+                implementation(npm("highlight.js", "10.7.2"))
+                implementation(compose.web.core)
+                implementation(compose.runtime)
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:17.0.2-pre.206-kotlin-1.5.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:17.0.2-pre.206-kotlin-1.5.10")
             }

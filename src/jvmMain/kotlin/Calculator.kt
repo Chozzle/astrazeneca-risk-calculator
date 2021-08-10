@@ -43,7 +43,12 @@ data class Virus(
     val ageToMortality: Map<Int, Double>
 )
 
-data class Scenario(val citizenContext: CitizenContext, val virusEnvironment: VirusEnvironment)
+data class ScenarioOutcome(val vaccineOutcome: Risk, val comparisonVaccineOutcome: Risk)
+
+// endregion
+
+
+// region Calculations
 
 /**
  * People aren't that concerned about a little side effect, so focus on hospitalizations and deaths.
@@ -71,13 +76,6 @@ data class Scenario(val citizenContext: CitizenContext, val virusEnvironment: Vi
  *
  * Show comparison to risky activities like skydiving?
  * */
-data class ScenarioOutcome(val vaccineOutcome: Risk, val comparisonVaccineOutcome: Risk)
-
-// endregion
-
-
-// region Calculations
-
 fun calculateScenarioOutcome(citizenContext: CitizenContext, virusEnvironment: VirusEnvironment): ScenarioOutcome {
     val virusMortality = virusEnvironment.virus.ageToMortality[citizenContext.age]!!
     val virusHospitalizationChance = virusEnvironment.virus.ageToHospitalizationChance[citizenContext.age]!!

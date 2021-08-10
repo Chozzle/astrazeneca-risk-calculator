@@ -30,7 +30,6 @@ fun ComingSoon() {
         Div({
             classes(WtRows.wtRow, WtRows.wtRowSizeM, WtRows.wtRowSmAlignItemsCenter)
         }) {
-
             Div({
                 classes(
                     WtCols.wtCol10,

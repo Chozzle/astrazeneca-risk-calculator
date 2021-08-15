@@ -17,13 +17,16 @@ object AstraZeneca : Vaccine {
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
     override fun ageToSideEffectMortality(age: Int): Double {
         // Ignoring age for now
-        return totalAZVaccinesAustralia.toDouble() / totalDeaths
+        return totalDeaths / totalAZVaccinesAustralia.toDouble()
     }
 
     private const val totalAZVaccinesAustralia = 7_400_000
     private const val totalDeaths = 7 // Includes 1 case of ITP.
 
-    override fun getFirstDoseEffectiveness(age: Int) = Effectiveness(
+    // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
+    override val medianTimeToSideEffectOnset = Duration.days(12)
+
+    override fun firstDoseEffectiveness() = Effectiveness(
 
         // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
         effectiveness = 0.307,
@@ -32,24 +35,26 @@ object AstraZeneca : Vaccine {
         hospitalizationEffectiveness = 0.71,
     )
 
-    override fun secondDoseEffectiveness(age: Int) = Effectiveness(
+    override fun secondDoseEffectiveness() = Effectiveness(
 
         // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
         effectiveness = 0.67,
 
         // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
+        // This is higher than the 80% used here in the most recent AZ cost/benefit recommendation from the Australian Government Department of Health
+        // https://www.health.gov.au/sites/default/files/documents/2021/06/covid-19-vaccination-weighing-up-the-potential-benefits-against-risk-of-harm-from-covid-19-vaccine-astrazeneca_1.pdf
         hospitalizationEffectiveness = 0.92,
     )
 
     override val timeBetweenDoses: Duration = Duration.days(12 * 7)
 
-    // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-28-july-2021
+    // https://www.health.gov.au/news/australian-technical-advisory-group-on-immunisation-atagi-weekly-covid-19-meeting-on-11-august-2021-update
     private val ageToHospitalizationTable = mapOf<IntRange, Double>(
-        0..49 to 3.2 / 100_000,
-        50..59 to 2.4 / 100_000,
+        0..49 to 3.4 / 100_000,
+        50..59 to 2.5 / 100_000,
         60..69 to 1.5 / 100_000,
         70..79 to 2.1 / 100_000,
-        80..Int.MAX_VALUE to 1.7 / 100_000,
+        80..Int.MAX_VALUE to 1.6 / 100_000,
     )
 }
 
@@ -63,11 +68,14 @@ object Pfizer : Vaccine {
     }
 
     override fun ageToSideEffectMortality(age: Int): Double {
-        // No reports in Australia? Need to confirm
+        // No reports in Australia. Need to confirm. This appears to confirm by omission
+        // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
         return 0.0
     }
 
-    override fun getFirstDoseEffectiveness(age: Int): Effectiveness {
+    override val medianTimeToSideEffectOnset = Duration.days(0) // Not used
+
+    override fun firstDoseEffectiveness(): Effectiveness {
         return Effectiveness(
             // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
             effectiveness = 0.307,
@@ -77,7 +85,7 @@ object Pfizer : Vaccine {
         )
     }
 
-    override fun secondDoseEffectiveness(age: Int): Effectiveness {
+    override fun secondDoseEffectiveness(): Effectiveness {
         return Effectiveness(
             // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
             effectiveness = 0.88,
@@ -87,11 +95,7 @@ object Pfizer : Vaccine {
         )
     }
 
-    override val timeBetweenDoses: Duration
-        get() = TODO("Not yet implemented")
-    override val riskReduction: Risk
-        get() = TODO("Not yet implemented")
-
+    override val timeBetweenDoses = Duration.days(3 * 7)
 }
 
 object CovidDelta : Virus {

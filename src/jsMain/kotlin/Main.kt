@@ -3,17 +3,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import kotlinext.js.asJsObject
-import kotlinext.js.getOwnPropertyNames
-import kotlinx.html.InputType
-import org.jetbrains.compose.web.attributes.name
-import org.jetbrains.compose.web.attributes.value
 import org.jetbrains.compose.web.css.Style
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H1
-import org.jetbrains.compose.web.dom.Input
-import org.jetbrains.compose.web.dom.Label
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.TextInput

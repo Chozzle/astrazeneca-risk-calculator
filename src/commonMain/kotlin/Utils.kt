@@ -11,3 +11,8 @@ fun maxDays(a: Duration, b: Duration): Duration = max(a.inWholeDays, b.inWholeDa
 fun linearInterpolation(start: Long, end: Long, amount: Double): Long {
     return start + ((end - start) * amount).toLong()
 }
+
+
+fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: Double): Effectiveness {
+    return start + ((end - start) * amount)
+}

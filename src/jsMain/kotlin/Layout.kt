@@ -13,6 +13,7 @@ fun Layout(content: @Composable () -> Unit) {
         style {
             display(DisplayStyle.Flex)
             flexDirection(FlexDirection.Column)
+            alignContent(AlignContent.Center)
             height(100.percent)
             margin(0.px)
             boxSizing("border-box")

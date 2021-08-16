@@ -66,26 +66,33 @@ fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironm
         if (day < citizen.vaccinationA.timeUntilFirstDose.inWholeDays) {
             return@map ScenarioOutcome(
                 noVaccineOutcome = riskWithNoVaccine,
-                vaccineAOutcome = riskWithNoVaccine,
-                vaccineBOutcome = riskWithNoVaccine
+                vaccineAOutcome = VaccineScenarioOutcome(riskWithNoVaccine, riskWithNoVaccine),
+                vaccineBOutcome = VaccineScenarioOutcome(riskWithNoVaccine, riskWithNoVaccine)
             )
         }
 
         // Assume all risk occurs on the day of side effect onset. I can spread it over multiple days later if needing to graph more realistically.
-        // Result for cumulative risk won't change
+        // Result for cumulative risk won't be affected by this assumption
         val vaccinationASideEffectRiskForDay = vaccineRiskOnDay(dayAsDuration, citizen.vaccinationA, citizen.age)
         val vaccinationBSideEffectRiskForDay = vaccineRiskOnDay(dayAsDuration, citizen.vaccinationB, citizen.age)
 
         val vaccinationAEffectiveness = vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationA)
         val vaccinationBEffectiveness = vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationB)
-        val vaccinationScheduleARisk =
+        val vaccinationScheduleAResidualVirusRisk =
             riskWithNoVaccine.times(effectiveness = vaccinationAEffectiveness, age = citizen.age)
-        val vaccinationScheduleBRisk =
+        val vaccinationScheduleBResidualVirusRisk =
             riskWithNoVaccine.times(effectiveness = vaccinationBEffectiveness, age = citizen.age)
+
         return@map ScenarioOutcome(
             noVaccineOutcome = riskWithNoVaccine,
-            vaccineAOutcome = vaccinationScheduleARisk + vaccinationASideEffectRiskForDay,
-            vaccineBOutcome = vaccinationScheduleBRisk + vaccinationBSideEffectRiskForDay
+            vaccineAOutcome = VaccineScenarioOutcome(
+                vaccinationScheduleAResidualVirusRisk,
+                vaccinationASideEffectRiskForDay
+            ),
+            vaccineBOutcome = VaccineScenarioOutcome(
+                sideEffectRisk = vaccinationBSideEffectRiskForDay,
+                residualCovidRisk = vaccinationScheduleBResidualVirusRisk
+            )
         )
     }
 }
@@ -98,7 +105,7 @@ fun vaccinationScheduleEffectivenessOnDay(day: Duration, vaccineFirstDoseEvent: 
     if (day > vaccineFirstDoseEvent.timeUntilFirstDose + Vaccine.timeUntilVaccinationEffective) {
         return vaccineFirstDoseEvent.vaccine.firstDoseEffectiveness()
     }
-    // Assume linear increase of effectiveness from first dose up to day of studied effectiveness.
+    // Assume linear increase of effectiveness from first dose up to day of studied effectiveness. Not great, but better than step change
     val effectivenessIncreasePeriod = Vaccine.timeUntilVaccinationEffective
     val dayIntoEffectivenessIncreasePeriod = day - vaccineFirstDoseEvent.timeUntilFirstDose
     return linearInterpolation(

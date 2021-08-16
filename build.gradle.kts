@@ -40,7 +40,11 @@ kotlin {
         all {
             languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
         }
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation("com.ionspin.kotlin:bignum:0.3.1")
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))

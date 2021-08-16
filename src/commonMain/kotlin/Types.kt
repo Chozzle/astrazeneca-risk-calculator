@@ -27,15 +27,16 @@ data class Effectiveness(
 ) {
     fun mortalityEffectiveness(age: Int): Double {
 
+        return hospitalizationEffectiveness
         // Can't find data on this. Best effort is to calculate based on general mortality after hospitalization
         // TODO confirm if this is counting the risk reduction twice anywhere within the calculation
-        val hazard = 1 - hospitalizationEffectiveness
-        val hazardReduction = CovidDelta.ageToMortalityAfterHospitalization(
-            age,
-            Gender.UNSPECIFIED // TODO
-        )
-        val mortalityHazard = hazard * hazardReduction
-        return 1 - mortalityHazard
+//        val hazard = 1 - hospitalizationEffectiveness
+//        val hazardReduction = CovidDelta.ageToMortalityAfterHospitalization(
+//            age,
+//            Gender.UNSPECIFIED // TODO
+//        )
+//        val mortalityHazard = hazard * hazardReduction
+//        return 1 - mortalityHazard
     }
 
 
@@ -64,7 +65,17 @@ data class Effectiveness(
     }
 }
 
-// region Data
+data class VaccineScenarioOutcome(val sideEffectRisk: Risk, val residualCovidRisk: Risk) {
+    operator fun plus(other: VaccineScenarioOutcome): VaccineScenarioOutcome = VaccineScenarioOutcome(
+        sideEffectRisk = sideEffectRisk + other.sideEffectRisk,
+        residualCovidRisk = residualCovidRisk + other.residualCovidRisk,
+    )
+
+    operator fun times(value: Double): VaccineScenarioOutcome = VaccineScenarioOutcome(
+        sideEffectRisk = sideEffectRisk * value,
+        residualCovidRisk = residualCovidRisk * value,
+    )
+}
 
 data class Risk(val hospitalization: Double, val mortality: Double) {
     operator fun plus(other: Risk): Risk = Risk(hospitalization + other.hospitalization, mortality + other.mortality)
@@ -117,7 +128,9 @@ interface Virus {
     fun ageToMortality(age: Int, gender: Gender): Double
 }
 
-data class ScenarioOutcome(val noVaccineOutcome: Risk, val vaccineAOutcome: Risk, val vaccineBOutcome: Risk) {
+data class ScenarioOutcome(val noVaccineOutcome: Risk,
+                           val vaccineAOutcome: VaccineScenarioOutcome,
+                           val vaccineBOutcome: VaccineScenarioOutcome) {
     operator fun plus(other: ScenarioOutcome): ScenarioOutcome = ScenarioOutcome(
         noVaccineOutcome = noVaccineOutcome + other.noVaccineOutcome,
         vaccineAOutcome = vaccineAOutcome + other.vaccineAOutcome,

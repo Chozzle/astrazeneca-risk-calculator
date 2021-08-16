@@ -91,7 +91,7 @@ data class CitizenContext(
     val vaccinationB: VaccineFirstDoseEvent,
 ) {
     init {
-        if (vaccinationB.timeUntilVaccineFirstDose < vaccinationA.timeUntilVaccineFirstDose) {
+        if (vaccinationB.timeUntilFirstDose < vaccinationA.timeUntilFirstDose) {
             error("Calculation not valid for Vaccine B earlier than Vaccine A")
         }
     }
@@ -99,10 +99,10 @@ data class CitizenContext(
 
 data class VaccineFirstDoseEvent(
     val vaccine: Vaccine,
-    val timeUntilVaccineFirstDose: Duration
+    val timeUntilFirstDose: Duration
 ) {
     val timeUntilFullVaccineEffectiveness =
-        timeUntilVaccineFirstDose + vaccine.timeBetweenDoses + Vaccine.timeUntilVaccinationEffective
+        timeUntilFirstDose + vaccine.timeBetweenDoses + Vaccine.timeUntilVaccinationEffective
 }
 
 data class VirusEnvironment(

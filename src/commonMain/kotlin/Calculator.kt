@@ -63,7 +63,7 @@ fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironm
         )
 
         val riskWithNoVaccine = noVaccineRiskIfInfected * chanceOfPositiveForDay
-        if (day < citizen.vaccinationA.timeUntilVaccineFirstDose.inWholeDays) {
+        if (day < citizen.vaccinationA.timeUntilFirstDose.inWholeDays) {
             return@map ScenarioOutcome(
                 noVaccineOutcome = riskWithNoVaccine,
                 vaccineAOutcome = riskWithNoVaccine,
@@ -91,16 +91,16 @@ fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironm
 }
 
 fun vaccinationScheduleEffectivenessOnDay(day: Duration, vaccineFirstDoseEvent: VaccineFirstDoseEvent): Effectiveness {
-    if (day < vaccineFirstDoseEvent.timeUntilVaccineFirstDose) {
+    if (day < vaccineFirstDoseEvent.timeUntilFirstDose) {
         return Effectiveness.noEffectiveness
     }
 
-    if (day > vaccineFirstDoseEvent.timeUntilVaccineFirstDose + Vaccine.timeUntilVaccinationEffective) {
+    if (day > vaccineFirstDoseEvent.timeUntilFirstDose + Vaccine.timeUntilVaccinationEffective) {
         return vaccineFirstDoseEvent.vaccine.firstDoseEffectiveness()
     }
     // Assume linear increase of effectiveness from first dose up to day of studied effectiveness.
     val effectivenessIncreasePeriod = Vaccine.timeUntilVaccinationEffective
-    val dayIntoEffectivenessIncreasePeriod = day - vaccineFirstDoseEvent.timeUntilVaccineFirstDose
+    val dayIntoEffectivenessIncreasePeriod = day - vaccineFirstDoseEvent.timeUntilFirstDose
     return linearInterpolation(
         start = Effectiveness.noEffectiveness,
         end = vaccineFirstDoseEvent.vaccine.firstDoseEffectiveness(),
@@ -110,7 +110,7 @@ fun vaccinationScheduleEffectivenessOnDay(day: Duration, vaccineFirstDoseEvent: 
 
 
 private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccineEvent: VaccineFirstDoseEvent, age: Int) =
-    if (dayAsDuration == vaccineEvent.timeUntilVaccineFirstDose) {
+    if (dayAsDuration == vaccineEvent.timeUntilFirstDose) {
         vaccineEvent.vaccine.ageToSideEffectRisk(age)
     } else {
         Risk.noRisk

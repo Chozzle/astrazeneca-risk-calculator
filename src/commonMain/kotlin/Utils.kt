@@ -16,3 +16,5 @@ fun linearInterpolation(start: Long, end: Long, amount: Double): Long {
 fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: Double): Effectiveness {
     return start + ((end - start) * amount)
 }
+
+fun Duration.weeks(value: Long) = Duration.days(value * 7)

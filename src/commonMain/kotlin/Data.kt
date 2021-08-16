@@ -114,15 +114,16 @@ object CovidDelta : Virus {
     )
 
     override fun ageToMortality(age: Int, gender: Gender): Double {
-        return ageToMortalityTable.entries.find { (ageRange, _) ->
-            age in ageRange
-        }!!.value
+        return caseFatalityRateAustralia(age, gender)
+//        return ageToMortalityTableCDC.entries.find { (ageRange, _) ->
+//            age in ageRange
+//        }!!.value
     }
 
     // Based on https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/burden.html
     // TODO This does seem low. Is this counting cases where patients are already vaccinated?
     // Should probably switch to using Australian data
-    private val ageToMortalityTable = mapOf<IntRange, Double>(
+    private val ageToMortalityTableCDC = mapOf<IntRange, Double>(
         0..17 to 0.5 / 100_000,
         18..49 to 25.0 / 100_000,
         50..64 to 85.0 / 100_000,
@@ -130,7 +131,7 @@ object CovidDelta : Virus {
     )
 
     fun ageToMortalityAfterHospitalization(age: Int, gender: Gender): Double {
-        return ageToMortality(age, gender) / ageToHospitalizationChance(age)
+        return ageToHospitalizationChance(age)
     }
 
     /* // At 15 Aug 2021
@@ -145,6 +146,28 @@ object CovidDelta : Virus {
      // been hospitalized.
      val hospitalizationChance = totalActiveHospitalized / activeCases*/
 
+    private fun caseFatalityRateAustralia(age: Int, gender: Gender): Double {
+        val totalCasesMale = totalCasesAustraliaMale.entries.find { (ageRange, _) ->
+            age in ageRange
+        }!!.value
+        val totalCasesFemale = totalCasesAustraliaFemale.entries.find { (ageRange, _) ->
+            age in ageRange
+        }!!.value
+
+        val totalDeathsMale = totalDeathsAustraliaByAgeMale.entries.find { (ageRange, _) ->
+            age in ageRange
+        }!!.value
+
+        val totalDeathsFemale = totalDeathsAustraliaByAgeFemale.entries.find { (ageRange, _) ->
+            age in ageRange
+        }!!.value
+
+        return when (gender) {
+            Gender.MALE -> totalDeathsMale.toDouble() / totalCasesMale
+            Gender.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
+            Gender.UNSPECIFIED -> totalDeathsMale.toDouble() + totalDeathsFemale.toDouble() / totalCasesMale + totalCasesFemale
+        }
+    }
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
     private val totalCasesAustraliaMale = mapOf<IntRange, Int>(

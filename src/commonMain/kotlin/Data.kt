@@ -120,6 +120,8 @@ object CovidDelta : Virus {
     }
 
     // Based on https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/burden.html
+    // TODO This does seem low. Is this counting cases where patients are already vaccinated?
+    // Should probably switch to using Australian data
     private val ageToMortalityTable = mapOf<IntRange, Double>(
         0..17 to 0.5 / 100_000,
         18..49 to 25.0 / 100_000,

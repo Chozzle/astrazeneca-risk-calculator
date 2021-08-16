@@ -35,6 +35,11 @@ import kotlin.time.Duration
  * Show comparison to risky activities like skydiving?
  * */
 
+
+/**
+ * Really need to highlight the "No Vaccine option" should consider beyond the scenario timeline. You will eventually get covid
+ * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
+ * */
 fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): ScenarioOutcome {
     return calculateScenarioOutcome(citizen, environment).reduce { acc, scenarioOutcome ->
         acc + scenarioOutcome

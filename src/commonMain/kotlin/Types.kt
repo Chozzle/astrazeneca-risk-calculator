@@ -28,6 +28,7 @@ data class Effectiveness(
     fun mortalityEffectiveness(age: Int): Double {
 
         // Can't find data on this. Best effort is to calculate based on general mortality after hospitalization
+        // TODO confirm if this is counting the risk reduction twice anywhere within the calculation
         val hazard = 1 - hospitalizationEffectiveness
         val hazardReduction = CovidDelta.ageToMortalityAfterHospitalization(
             age,

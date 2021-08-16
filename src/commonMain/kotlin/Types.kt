@@ -1,9 +1,10 @@
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlin.time.Duration
 
 interface Vaccine {
     val name: String
-    fun ageToSideEffectHospitalizationChance(age: Int): Double
-    fun ageToSideEffectMortality(age: Int): Double
+    fun ageToSideEffectHospitalizationChance(age: Int): BigDecimal
+    fun ageToSideEffectMortality(age: Int): BigDecimal
     val medianTimeToSideEffectOnset: Duration
     fun firstDoseEffectiveness(): Effectiveness
     fun secondDoseEffectiveness(): Effectiveness
@@ -22,10 +23,10 @@ interface Vaccine {
 }
 
 data class Effectiveness(
-    val effectiveness: Double,
-    val hospitalizationEffectiveness: Double,
+    val effectiveness: BigDecimal,
+    val hospitalizationEffectiveness: BigDecimal,
 ) {
-    fun mortalityEffectiveness(age: Int): Double {
+    fun mortalityEffectiveness(age: Int): BigDecimal {
 
         return hospitalizationEffectiveness
         // Can't find data on this. Best effort is to calculate based on general mortality after hospitalization
@@ -55,13 +56,13 @@ data class Effectiveness(
         hospitalizationEffectiveness = hospitalizationEffectiveness * other.hospitalizationEffectiveness
     )
 
-    operator fun times(likelihood: Double): Effectiveness = Effectiveness(
+    operator fun times(likelihood: BigDecimal): Effectiveness = Effectiveness(
         effectiveness = effectiveness * likelihood,
         hospitalizationEffectiveness = hospitalizationEffectiveness * likelihood
     )
 
     companion object {
-        val noEffectiveness = Effectiveness(0.0, 0.0)
+        val noEffectiveness = Effectiveness(BigDecimal.ZERO, BigDecimal.ZERO)
     }
 }
 
@@ -71,25 +72,25 @@ data class VaccineScenarioOutcome(val sideEffectRisk: Risk, val residualCovidRis
         residualCovidRisk = residualCovidRisk + other.residualCovidRisk,
     )
 
-    operator fun times(value: Double): VaccineScenarioOutcome = VaccineScenarioOutcome(
+    operator fun times(value: BigDecimal): VaccineScenarioOutcome = VaccineScenarioOutcome(
         sideEffectRisk = sideEffectRisk * value,
         residualCovidRisk = residualCovidRisk * value,
     )
 }
 
-data class Risk(val hospitalization: Double, val mortality: Double) {
+data class Risk(val hospitalization: BigDecimal, val mortality: BigDecimal) {
     operator fun plus(other: Risk): Risk = Risk(hospitalization + other.hospitalization, mortality + other.mortality)
     operator fun minus(other: Risk): Risk = Risk(hospitalization - other.hospitalization, mortality - other.mortality)
     operator fun times(other: Risk): Risk = Risk(hospitalization * other.hospitalization, mortality * other.mortality)
-    operator fun times(likelihood: Double): Risk = Risk(hospitalization * likelihood, mortality * likelihood)
+    operator fun times(likelihood: BigDecimal): Risk = Risk(hospitalization * likelihood, mortality * likelihood)
     fun times(effectiveness: Effectiveness, age: Int): Risk =
         Risk(
-            hospitalization = hospitalization * (1 - effectiveness.hospitalizationEffectiveness),
-            mortality = mortality * (1 - effectiveness.mortalityEffectiveness(age))
+            hospitalization = hospitalization * (BigDecimal.ONE - effectiveness.hospitalizationEffectiveness),
+            mortality = mortality * (BigDecimal.ONE - effectiveness.mortalityEffectiveness(age))
         )
 
     companion object {
-        val noRisk = Risk(0.0, 0.0)
+        val noRisk = Risk(BigDecimal.ZERO, BigDecimal.ZERO)
     }
 }
 
@@ -124,8 +125,8 @@ data class VirusEnvironment(
 )
 
 interface Virus {
-    fun ageToHospitalizationChance(age: Int): Double
-    fun ageToMortality(age: Int, gender: Gender): Double
+    fun ageToHospitalizationChance(age: Int): BigDecimal
+    fun ageToMortality(age: Int, gender: Gender): BigDecimal
 }
 
 data class ScenarioOutcome(val noVaccineOutcome: Risk,
@@ -137,10 +138,10 @@ data class ScenarioOutcome(val noVaccineOutcome: Risk,
         vaccineBOutcome = vaccineBOutcome + other.vaccineBOutcome,
     )
 
-    operator fun times(double: Double): ScenarioOutcome = ScenarioOutcome(
-        noVaccineOutcome = noVaccineOutcome * double,
-        vaccineAOutcome = vaccineAOutcome * double,
-        vaccineBOutcome = vaccineBOutcome * double,
+    operator fun times(BigDecimal: BigDecimal): ScenarioOutcome = ScenarioOutcome(
+        noVaccineOutcome = noVaccineOutcome * BigDecimal,
+        vaccineAOutcome = vaccineAOutcome * BigDecimal,
+        vaccineBOutcome = vaccineBOutcome * BigDecimal,
     )
 
 }

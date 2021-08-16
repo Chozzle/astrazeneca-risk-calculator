@@ -35,20 +35,20 @@ class ScenarioTest {
         println("How many people in 100,000 have these outcomes")
         println("----------------------------------------------")
         println("-- No vaccine ever: --")
-        println("  Covid causing hospitalization      :" + noVaccineLifetimeRisk.hospitalization * 100_000.0)
-        println("  Covid causing death                :" + noVaccineLifetimeRisk.mortality * 100_000.0)
+        println("  Covid causing hospitalization      :" + noVaccineLifetimeRisk.hospitalization * 100_000)
+        println("  Covid causing death                :" + noVaccineLifetimeRisk.mortality * 100_000)
 
         println("-- AstraZeneca now: --")
-        println("  Side effect causing hospitalisation: "+ outcome.vaccineAOutcome.sideEffectRisk.hospitalization * 100_000.0)
-        println("  Side effect causing death          : "+ outcome.vaccineAOutcome.sideEffectRisk.mortality * 100_000.0)
-        println("  Covid causing hospitalization      : "+ outcome.vaccineAOutcome.residualCovidRisk.mortality * 100_000.0)
-        println("  Covid causing death                : "+ outcome.vaccineAOutcome.residualCovidRisk.mortality * 100_000.0)
+        println("  Side effect causing hospitalisation: "+ outcome.vaccineAOutcome.sideEffectRisk.hospitalization * 100_000)
+        println("  Side effect causing death          : "+ outcome.vaccineAOutcome.sideEffectRisk.mortality * 100_000)
+        println("  Covid causing hospitalization      : "+ outcome.vaccineAOutcome.residualCovidRisk.mortality * 100_000)
+        println("  Covid causing death                : "+ outcome.vaccineAOutcome.residualCovidRisk.mortality * 100_000)
 
         println("-- Pfizer later: --")
-        println("  Side effect causing hospitalisation: "+ outcome.vaccineBOutcome.sideEffectRisk.hospitalization * 100_000.0)
-        println("  Side effect causing death          : "+ outcome.vaccineBOutcome.sideEffectRisk.mortality * 100_000.0)
-        println("  Covid causing hospitalization      : "+ outcome.vaccineBOutcome.residualCovidRisk.mortality * 100_000.0)
-        println("  Covid causing death                : "+ outcome.vaccineBOutcome.residualCovidRisk.mortality * 100_000.0)
+        println("  Side effect causing hospitalisation: "+ outcome.vaccineBOutcome.sideEffectRisk.hospitalization * 100_000)
+        println("  Side effect causing death          : "+ outcome.vaccineBOutcome.sideEffectRisk.mortality * 100_000)
+        println("  Covid causing hospitalization      : "+ outcome.vaccineBOutcome.residualCovidRisk.mortality * 100_000)
+        println("  Covid causing death                : "+ outcome.vaccineBOutcome.residualCovidRisk.mortality * 100_000)
     }
 
 }

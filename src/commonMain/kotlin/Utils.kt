@@ -1,3 +1,4 @@
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -12,8 +13,11 @@ fun linearInterpolation(start: Long, end: Long, amount: Double): Long {
     return start + ((end - start) * amount).toLong()
 }
 
+fun linearInterpolation(start: BigDecimal, end: BigDecimal, amount: BigDecimal): BigDecimal {
+    return start + ((end - start) * amount)
+}
 
-fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: Double): Effectiveness {
+fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: BigDecimal): Effectiveness {
     return start + ((end - start) * amount)
 }
 

@@ -1,3 +1,5 @@
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlin.time.Duration
 
 // https://www.healthline.com/health-news/heres-how-well-covid-19-vaccines-work-against-the-delta-variant#Key-takeaways
@@ -8,16 +10,16 @@ object AstraZeneca : Vaccine {
 
     override val name: String = "AstraZeneca"
 
-    override fun ageToSideEffectHospitalizationChance(age: Int): Double {
+    override fun ageToSideEffectHospitalizationChance(age: Int): BigDecimal {
         return ageToHospitalizationTable.entries.find { (ageRange, _) ->
             age in ageRange
-        }!!.value
+        }!!.value.toBigDecimal()
     }
 
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
-    override fun ageToSideEffectMortality(age: Int): Double {
+    override fun ageToSideEffectMortality(age: Int): BigDecimal {
         // Ignoring age for now
-        return totalDeaths / totalAZVaccinesAustralia.toDouble()
+        return totalDeaths.toBigDecimal() / totalAZVaccinesAustralia.toBigDecimal()
     }
 
     private const val totalAZVaccinesAustralia = 7_400_000
@@ -29,21 +31,21 @@ object AstraZeneca : Vaccine {
     override fun firstDoseEffectiveness() = Effectiveness(
 
         // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
-        effectiveness = 0.307,
+        effectiveness = 0.307.toBigDecimal(),
 
         // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
-        hospitalizationEffectiveness = 0.71,
+        hospitalizationEffectiveness = 0.71.toBigDecimal(),
     )
 
     override fun secondDoseEffectiveness() = Effectiveness(
 
         // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
-        effectiveness = 0.67,
+        effectiveness = 0.67.toBigDecimal(),
 
         // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
         // This is higher than the 80% used here in the most recent AZ cost/benefit recommendation from the Australian Government Department of Health
         // https://www.health.gov.au/sites/default/files/documents/2021/06/covid-19-vaccination-weighing-up-the-potential-benefits-against-risk-of-harm-from-covid-19-vaccine-astrazeneca_1.pdf
-        hospitalizationEffectiveness = 0.92,
+        hospitalizationEffectiveness = 0.92.toBigDecimal(),
     )
 
     override val timeBetweenDoses: Duration = Duration.days(12 * 7)
@@ -61,16 +63,16 @@ object AstraZeneca : Vaccine {
 object Pfizer : Vaccine {
     override val name = "Pfizer"
 
-    override fun ageToSideEffectHospitalizationChance(age: Int): Double {
+    override fun ageToSideEffectHospitalizationChance(age: Int): BigDecimal {
         // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
         // Based on Covid heart inflammation being worse than the vaccine side effects, and Covid being guaranteed eventually
-        return 0.0
+        return BigDecimal.ZERO
     }
 
-    override fun ageToSideEffectMortality(age: Int): Double {
+    override fun ageToSideEffectMortality(age: Int): BigDecimal {
         // No reports in Australia. Need to confirm. This appears to confirm by omission
         // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
-        return 0.0
+        return BigDecimal.ZERO
     }
 
     override val medianTimeToSideEffectOnset = Duration.days(0) // Not used
@@ -78,20 +80,20 @@ object Pfizer : Vaccine {
     override fun firstDoseEffectiveness(): Effectiveness {
         return Effectiveness(
             // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
-            effectiveness = 0.307,
+            effectiveness = 0.307.toBigDecimal(),
 
             // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
-            hospitalizationEffectiveness = 0.94,
+            hospitalizationEffectiveness = 0.94.toBigDecimal(),
         )
     }
 
     override fun secondDoseEffectiveness(): Effectiveness {
         return Effectiveness(
             // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
-            effectiveness = 0.88,
+            effectiveness = 0.88.toBigDecimal(),
 
             // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
-            hospitalizationEffectiveness = 0.96,
+            hospitalizationEffectiveness = 0.96.toBigDecimal(),
         )
     }
 
@@ -99,10 +101,10 @@ object Pfizer : Vaccine {
 }
 
 object CovidDelta : Virus {
-    override fun ageToHospitalizationChance(age: Int): Double {
+    override fun ageToHospitalizationChance(age: Int): BigDecimal {
         return ageToHospitalizationTable.entries.find { (ageRange, _) ->
             age in ageRange
-        }!!.value
+        }!!.value.toBigDecimal()
     }
 
     // Based on https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/burden.html
@@ -113,7 +115,7 @@ object CovidDelta : Virus {
         65..Int.MAX_VALUE to 5195.0 / 100_000,
     )
 
-    override fun ageToMortality(age: Int, gender: Gender): Double {
+    override fun ageToMortality(age: Int, gender: Gender): BigDecimal {
         return caseFatalityRateAustralia(age, gender)
 //        return ageToMortalityTableCDC.entries.find { (ageRange, _) ->
 //            age in ageRange
@@ -130,7 +132,7 @@ object CovidDelta : Virus {
         65..Int.MAX_VALUE to 1139.0 / 100_000,
     )
 
-    fun ageToMortalityAfterHospitalization(age: Int, gender: Gender): Double {
+    fun ageToMortalityAfterHospitalization(age: Int, gender: Gender): BigDecimal {
         return ageToHospitalizationChance(age)
     }
 
@@ -146,7 +148,7 @@ object CovidDelta : Virus {
      // been hospitalized.
      val hospitalizationChance = totalActiveHospitalized / activeCases*/
 
-    private fun caseFatalityRateAustralia(age: Int, gender: Gender): Double {
+    private fun caseFatalityRateAustralia(age: Int, gender: Gender): BigDecimal {
         val totalCasesMale = totalCasesAustraliaMale.entries.find { (ageRange, _) ->
             age in ageRange
         }!!.value
@@ -163,9 +165,9 @@ object CovidDelta : Virus {
         }!!.value
 
         return when (gender) {
-            Gender.MALE -> totalDeathsMale.toDouble() / totalCasesMale
-            Gender.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
-            Gender.UNSPECIFIED -> totalDeathsMale.toDouble() + totalDeathsFemale.toDouble() / totalCasesMale + totalCasesFemale
+            Gender.MALE -> totalDeathsMale.toBigDecimal() / totalCasesMale
+            Gender.FEMALE -> totalDeathsFemale.toBigDecimal() / totalCasesFemale
+            Gender.UNSPECIFIED -> totalDeathsMale.toBigDecimal() + totalDeathsFemale.toBigDecimal() / totalCasesMale + totalCasesFemale
         }
     }
 

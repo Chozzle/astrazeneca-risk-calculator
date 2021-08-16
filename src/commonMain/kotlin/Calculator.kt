@@ -1,3 +1,5 @@
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlin.time.Duration
 
 /**
@@ -111,7 +113,7 @@ fun vaccinationScheduleEffectivenessOnDay(day: Duration, vaccineFirstDoseEvent: 
     return linearInterpolation(
         start = Effectiveness.noEffectiveness,
         end = vaccineFirstDoseEvent.vaccine.firstDoseEffectiveness(),
-        amount = dayIntoEffectivenessIncreasePeriod / effectivenessIncreasePeriod
+        amount = dayIntoEffectivenessIncreasePeriod.inWholeDays.toBigDecimal() / effectivenessIncreasePeriod.inWholeDays
     )
 }
 
@@ -131,7 +133,7 @@ fun calculateCitizenPositiveChance(
     scenarioDay: Duration,
     scenarioPeriod: Duration,
     environment: VirusEnvironment
-): Double {
+): BigDecimal {
     val caseCountOnDay = caseCountForDay(
         environment.dailyCaseCountNow,
         environment.dailyCaseCountAtEnd,
@@ -140,7 +142,7 @@ fun calculateCitizenPositiveChance(
     )
 
     // Basic homogenous calculation for now
-    return caseCountOnDay.toDouble() / environment.population
+    return caseCountOnDay.toBigDecimal() / environment.population
 }
 
 fun caseCountForDay(startCaseCount: Long, endCaseCount: Long, day: Duration, scenarioPeriod: Duration): Long {

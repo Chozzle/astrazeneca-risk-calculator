@@ -61,7 +61,7 @@ data class Effectiveness(
     )
 
     companion object {
-        val noEffectiveness = Effectiveness(0.0, 0.0)
+        val NONE = Effectiveness(0.0, 0.0)
     }
 }
 
@@ -89,7 +89,7 @@ data class Risk(val hospitalization: Double, val mortality: Double) {
         )
 
     companion object {
-        val noRisk = Risk(0.0, 0.0)
+        val NONE = Risk(0.0, 0.0)
     }
 }
 

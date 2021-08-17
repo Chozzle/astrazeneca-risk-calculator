@@ -1,5 +1,4 @@
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlin.time.Duration
 
 /**
@@ -43,9 +42,11 @@ import kotlin.time.Duration
  * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
  * */
 fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): ScenarioOutcome {
-    return calculateScenarioOutcome(citizen, environment).reduce { acc, scenarioOutcome ->
+    val scenarioDayOutcomes = calculateScenarioOutcome(citizen, environment)
+    val totalOfRisks = scenarioDayOutcomes.reduce { acc, scenarioOutcome ->
         acc + scenarioOutcome
     }
+    return totalOfRisks
 }
 
 fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironment): List<ScenarioOutcome> {
@@ -68,8 +69,14 @@ fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironm
         if (day < citizen.vaccinationA.timeUntilFirstDose.inWholeDays) {
             return@map ScenarioOutcome(
                 noVaccineOutcome = riskWithNoVaccine,
-                vaccineAOutcome = VaccineScenarioOutcome(riskWithNoVaccine, riskWithNoVaccine),
-                vaccineBOutcome = VaccineScenarioOutcome(riskWithNoVaccine, riskWithNoVaccine)
+                vaccineAOutcome = VaccineScenarioOutcome(
+                    sideEffectRisk = Risk.noRisk,
+                    residualCovidRisk = riskWithNoVaccine
+                ),
+                vaccineBOutcome = VaccineScenarioOutcome(
+                    sideEffectRisk = Risk.noRisk,
+                    residualCovidRisk = riskWithNoVaccine
+                )
             )
         }
 
@@ -113,10 +120,9 @@ fun vaccinationScheduleEffectivenessOnDay(day: Duration, vaccineFirstDoseEvent: 
     return linearInterpolation(
         start = Effectiveness.noEffectiveness,
         end = vaccineFirstDoseEvent.vaccine.firstDoseEffectiveness(),
-        amount = dayIntoEffectivenessIncreasePeriod.inWholeDays.toBigDecimal() / effectivenessIncreasePeriod.inWholeDays
+        amount = dayIntoEffectivenessIncreasePeriod.inWholeDays dividedBy effectivenessIncreasePeriod.inWholeDays
     )
 }
-
 
 private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccineEvent: VaccineFirstDoseEvent, age: Int) =
     if (dayAsDuration == vaccineEvent.timeUntilFirstDose) {
@@ -142,7 +148,7 @@ fun calculateCitizenPositiveChance(
     )
 
     // Basic homogenous calculation for now
-    return caseCountOnDay.toBigDecimal() / environment.population
+    return caseCountOnDay dividedBy environment.population
 }
 
 fun caseCountForDay(startCaseCount: Long, endCaseCount: Long, day: Duration, scenarioPeriod: Duration): Long {

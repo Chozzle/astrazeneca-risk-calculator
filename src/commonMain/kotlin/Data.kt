@@ -1,5 +1,4 @@
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlin.time.Duration
 
 // https://www.healthline.com/health-news/heres-how-well-covid-19-vaccines-work-against-the-delta-variant#Key-takeaways
@@ -19,7 +18,7 @@ object AstraZeneca : Vaccine {
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
     override fun ageToSideEffectMortality(age: Int): BigDecimal {
         // Ignoring age for now
-        return totalDeaths.toBigDecimal() / totalAZVaccinesAustralia.toBigDecimal()
+        return totalDeaths dividedBy totalAZVaccinesAustralia
     }
 
     private const val totalAZVaccinesAustralia = 7_400_000
@@ -146,7 +145,8 @@ object CovidDelta : Virus {
 
      // This is generously low to Covid. The real chance could be higher because this includes cases detected that have not yet
      // been hospitalized.
-     val hospitalizationChance = totalActiveHospitalized / activeCases*/
+     val hospitalizationChance = totalActiveHospitalized / activeCases
+     */
 
     private fun caseFatalityRateAustralia(age: Int, gender: Gender): BigDecimal {
         val totalCasesMale = totalCasesAustraliaMale.entries.find { (ageRange, _) ->
@@ -165,9 +165,9 @@ object CovidDelta : Virus {
         }!!.value
 
         return when (gender) {
-            Gender.MALE -> totalDeathsMale.toBigDecimal() / totalCasesMale
-            Gender.FEMALE -> totalDeathsFemale.toBigDecimal() / totalCasesFemale
-            Gender.UNSPECIFIED -> totalDeathsMale.toBigDecimal() + totalDeathsFemale.toBigDecimal() / totalCasesMale + totalCasesFemale
+            Gender.MALE -> totalDeathsMale dividedBy totalCasesMale
+            Gender.FEMALE -> totalDeathsFemale dividedBy totalCasesFemale
+            Gender.UNSPECIFIED -> (totalDeathsMale + totalDeathsFemale) dividedBy (totalCasesMale + totalCasesFemale)
         }
     }
 

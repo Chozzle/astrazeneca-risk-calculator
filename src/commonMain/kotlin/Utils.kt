@@ -1,4 +1,8 @@
+import com.ionspin.kotlin.bignum.BigNumber
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import com.ionspin.kotlin.bignum.decimal.DecimalMode
+import com.ionspin.kotlin.bignum.decimal.RoundingMode
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -22,3 +26,24 @@ fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: BigDec
 }
 
 fun Duration.weeks(value: Long) = Duration.days(value * 7)
+
+// The smallest number we might be dealing with is probably about 1 in 10 million;
+// 8 digits so double that to be sure :)
+// Specified rounding mode to avoid crash. Not sure why it's needed. Chose cheapest for calculation
+val decimalMode = DecimalMode(decimalPrecision = 16, roundingMode = RoundingMode.TOWARDS_ZERO)
+
+fun Double.toBigDecimal(): BigDecimal {
+    return BigDecimal.fromDouble(this, decimalMode)
+}
+
+fun Int.toBigDecimal(): BigDecimal {
+    return BigDecimal.fromInt(this, decimalMode)
+}
+
+infix fun Int.dividedBy(other: Int): BigDecimal =
+    BigDecimal.fromInt(this, decimalMode) / BigDecimal.fromInt(other, decimalMode)
+
+
+infix fun Long.dividedBy(other: Long) =
+    BigDecimal.fromLong(this, decimalMode) / BigDecimal.fromLong(other, decimalMode)
+

@@ -114,7 +114,11 @@ object CovidDelta : Virus {
     )
 
     override fun ageToMortality(age: Int, gender: Gender): Double {
+        // I think this is most accurate source based on CFR in Australian. We are basing the chance of infection on
+        // number of cases so CFR will correlate better.
+
         return caseFatalityRateAustralia(age, gender)
+//        return infectionFatalityRateWorld(age, gender)
 //        return ageToMortalityTableCDC.entries.find { (ageRange, _) ->
 //            age in ageRange
 //        }!!.value
@@ -146,7 +150,76 @@ object CovidDelta : Virus {
      // been hospitalized.
      val hospitalizationChance = totalActiveHospitalized / activeCases*/
 
-    private fun caseFatalityRateAustralia(age: Int, gender: Gender): Double {
+    fun infectionFatalityRateWorld(age: Int, gender: Gender): Double {
+        return when (gender) {
+            Gender.MALE -> {
+                infectionFatalityRatePercentWorldMen.entries.find { (ageRange, _) ->
+                    age in ageRange
+                }!!.value / 100
+            }
+            Gender.FEMALE -> {
+                infectionFatalityRatePercentWorldWomen.entries.find { (ageRange, _) ->
+                    age in ageRange
+                }!!.value / 100
+            }
+            Gender.UNSPECIFIED -> {
+                val men = infectionFatalityRatePercentWorldMen.entries.find { (ageRange, _) ->
+                    age in ageRange
+                }!!.value / 100
+                val women = infectionFatalityRatePercentWorldWomen.entries.find { (ageRange, _) ->
+                    age in ageRange
+                }!!.value / 100
+                arrayOf(men, women).average()
+            }
+        }
+
+    }
+
+    // This data is not based on Delta variant as the study is from earlier. However this mean it is unaffected by
+    // vaccinations
+    // https://www.nature.com/articles/s41586-020-2918-0/figures/2
+    private val infectionFatalityRatePercentWorldMen = mapOf<IntRange, Double>(
+        0..4 to 0.003,
+        5..9 to 0.0007,
+        10..14 to 0.001,
+        15..19 to 0.003,
+        20..24 to 0.008,
+        25..29 to 0.018,
+        30..34 to 0.032,
+        35..39 to 0.06,
+        40..44 to 0.115,
+        45..49 to 0.17,
+        50..54 to 0.3,
+        55..59 to 0.42,
+        60..64 to 0.6,
+        65..69 to 1.4,
+        70..74 to 2.2,
+        75..79 to 4.2,
+        80..Int.MAX_VALUE to 10.0,
+    )
+
+    // https://www.nature.com/articles/s41586-020-2918-0/figures/2
+    private val infectionFatalityRatePercentWorldWomen = mapOf<IntRange, Double>(
+        0..4 to 0.003,
+        5..9 to 0.0006,
+        10..14 to 0.0008,
+        15..19 to 0.0026,
+        20..24 to 0.005,
+        25..29 to 0.01,
+        30..34 to 0.014,
+        35..39 to 0.023,
+        40..44 to 0.061,
+        45..49 to 0.07,
+        50..54 to 0.125,
+        55..59 to 0.2,
+        60..64 to 0.32,
+        65..69 to 0.7,
+        70..74 to 1.0,
+        75..79 to 2.0,
+        80..Int.MAX_VALUE to 6.0,
+    )
+
+    fun caseFatalityRateAustralia(age: Int, gender: Gender): Double {
         val totalCasesMale = totalCasesAustraliaMale.entries.find { (ageRange, _) ->
             age in ageRange
         }!!.value
@@ -170,58 +243,62 @@ object CovidDelta : Virus {
     }
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
+    // Updated 20/8/2021
     private val totalCasesAustraliaMale = mapOf<IntRange, Int>(
-        0..9 to 1298,
-        10..19 to 1927,
-        20..29 to 4066,
-        30..39 to 3466,
-        40..49 to 2476,
-        50..59 to 2193,
-        60..69 to 1479,
-        70..79 to 990,
-        80..89 to 554,
-        90..Int.MAX_VALUE to 245,
+        0..9 to 1571,
+        10..19 to 2260,
+        20..29 to 4504,
+        30..39 to 3767,
+        40..49 to 2687,
+        50..59 to 2365,
+        60..69 to 1574,
+        70..79 to 1024,
+        80..89 to 575,
+        90..Int.MAX_VALUE to 260,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
+    // Updated 20/8/2021
     private val totalCasesAustraliaFemale = mapOf<IntRange, Int>(
-        0..9 to 1218,
-        10..19 to 1838,
-        20..29 to 4227,
-        30..39 to 3265,
-        40..49 to 2312,
-        50..59 to 2166,
-        60..69 to 1433,
-        70..79 to 865,
-        80..89 to 850,
-        90..Int.MAX_VALUE to 577,
+        0..9 to 1462,
+        10..19 to 2193,
+        20..29 to 4564,
+        30..39 to 3526,
+        40..49 to 2508,
+        50..59 to 2293,
+        60..69 to 1489,
+        70..79 to 893,
+        80..89 to 867,
+        90..Int.MAX_VALUE to 594,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
+    // Updated 20/8/2021
     private val totalDeathsAustraliaByAgeMale = mapOf<IntRange, Int>(
         0..9 to 0,
-        10..19 to 0,
+        10..19 to 1,
         20..29 to 2,
         30..39 to 3,
-        40..49 to 2,
+        40..49 to 3,
         50..59 to 10,
-        60..69 to 31,
-        70..79 to 104,
-        80..89 to 191,
-        90..Int.MAX_VALUE to 119,
+        60..69 to 32,
+        70..79 to 108,
+        80..89 to 196,
+        90..Int.MAX_VALUE to 121,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
+    // Updated 20/8/2021
     private val totalDeathsAustraliaByAgeFemale = mapOf<IntRange, Int>(
         0..9 to 0,
         10..19 to 0,
         20..29 to 0,
         30..39 to 1,
-        40..49 to 1,
-        50..59 to 6,
+        40..49 to 2,
+        50..59 to 7,
         60..69 to 13,
-        70..79 to 104,
-        80..89 to 203,
-        90..Int.MAX_VALUE to 206,
+        70..79 to 61,
+        80..89 to 205,
+        90..Int.MAX_VALUE to 207,
     )
 }

@@ -75,6 +75,10 @@ data class VaccineScenarioOutcome(val sideEffectRisk: Risk, val residualCovidRis
         sideEffectRisk = sideEffectRisk * value,
         residualCovidRisk = residualCovidRisk * value,
     )
+
+    fun totalRisk(): Risk {
+        return sideEffectRisk + residualCovidRisk
+    }
 }
 
 data class Risk(val hospitalization: Double, val mortality: Double) {
@@ -128,9 +132,11 @@ interface Virus {
     fun ageToMortality(age: Int, gender: Gender): Double
 }
 
-data class ScenarioOutcome(val noVaccineOutcome: Risk,
-                           val vaccineAOutcome: VaccineScenarioOutcome,
-                           val vaccineBOutcome: VaccineScenarioOutcome) {
+data class ScenarioOutcome(
+    val noVaccineOutcome: Risk,
+    val vaccineAOutcome: VaccineScenarioOutcome,
+    val vaccineBOutcome: VaccineScenarioOutcome
+) {
     operator fun plus(other: ScenarioOutcome): ScenarioOutcome = ScenarioOutcome(
         noVaccineOutcome = noVaccineOutcome + other.noVaccineOutcome,
         vaccineAOutcome = vaccineAOutcome + other.vaccineAOutcome,

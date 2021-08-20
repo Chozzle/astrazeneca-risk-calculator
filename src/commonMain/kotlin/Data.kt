@@ -95,7 +95,7 @@ object Pfizer : Vaccine {
         )
     }
 
-    override val timeBetweenDoses = Duration.days(3 * 7)
+    override val timeBetweenDoses = Duration.days(6 * 7)
 }
 
 object CovidDelta : Virus {

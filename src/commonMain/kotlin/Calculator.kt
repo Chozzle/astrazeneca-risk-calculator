@@ -5,16 +5,23 @@ import kotlin.time.Duration
  * Really need to highlight the "No Vaccine option" should consider beyond the scenario timeline. You will eventually get covid
  * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
  * */
-fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): ScenarioOutcome {
-    return calculateScenarioOutcome(citizen, environment).reduce { accumulation, scenarioOutcome ->
-        accumulation + scenarioOutcome
-    }
-}
-
-fun calculateScenarioOutcome(citizen: CitizenContext, environment: VirusEnvironment): List<ScenarioOutcome> {
+fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): EntireScenarioOutcome {
     val timeUntilVaccineAFullEffectiveness = citizen.vaccinationA.timeUntilFullVaccineEffectiveness
     val timeUntilVaccineBFullEffectiveness = citizen.vaccinationB.timeUntilFullVaccineEffectiveness
     val scenarioPeriod = maxDays(timeUntilVaccineAFullEffectiveness, timeUntilVaccineBFullEffectiveness)
+
+    val accumulatedOutcome = calculateScenarioOutcome(citizen, environment, scenarioPeriod)
+        .reduce { accumulation, scenarioOutcome ->
+            accumulation + scenarioOutcome
+        }
+    return EntireScenarioOutcome(accumulatedOutcome, scenarioPeriod)
+}
+
+fun calculateScenarioOutcome(
+    citizen: CitizenContext,
+    environment: VirusEnvironment,
+    scenarioPeriod: Duration
+): List<ScenarioOutcome> {
 
     val noVaccineRiskIfInfected = calculateNoVaccineRiskAfterInfection(citizen.age, citizen.gender, environment.virus)
 

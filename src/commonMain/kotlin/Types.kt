@@ -150,3 +150,5 @@ data class ScenarioOutcome(
     )
 
 }
+
+data class EntireScenarioOutcome(val scenarioOutcome: ScenarioOutcome, val scenarioPeriod: Duration)

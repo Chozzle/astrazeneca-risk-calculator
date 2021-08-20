@@ -5,7 +5,7 @@ import kotlin.time.Duration
 class ScenarioTest {
     val citizenContext = CitizenContext(
         age = 35,
-        gender = Gender.MALE,
+        gender = Gender.FEMALE,
         vaccinationA = VaccineFirstDoseEvent(
             vaccine = AstraZeneca,
             timeUntilFirstDose = Duration.days(3)
@@ -33,9 +33,11 @@ class ScenarioTest {
             citizenContext.gender,
             virusEnvironment.virus
         )
-        val outcome = accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironment)
+        val accumulatedOutcomeForScenarioPeriod = accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironment)
+        val outcome = accumulatedOutcomeForScenarioPeriod.scenarioOutcome
+        val scenarioPeriodDays = accumulatedOutcomeForScenarioPeriod.scenarioPeriod.inWholeDays
         println("----------------------------------------------")
-        println("How many people in 100,000 have these outcomes over the scenario period (until both vaccines fully effective)")
+        println("How many people in 100,000 have these outcomes over the scenario period of $scenarioPeriodDays days (until both vaccines fully effective)")
         println("----------------------------------------------")
         println("-- No vaccine ever: --")
         println("  Covid causing fatality             :" + noVaccineLifetimeRisk.mortality * 100_000.0)

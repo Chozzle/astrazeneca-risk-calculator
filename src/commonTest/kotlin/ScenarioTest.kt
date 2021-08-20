@@ -20,7 +20,7 @@ class ScenarioTest {
 
     val virusEnvironment = VirusEnvironment(
         dailyCaseCountNow = 5,
-        dailyCaseCountAtEnd = 5000,
+        dailyCaseCountAtEnd = 200,
         population = 2_700_000, // Brisbane and GC
         virus = CovidDelta
     )

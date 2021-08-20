@@ -2,42 +2,6 @@ import Risk.Companion.NONE
 import kotlin.time.Duration
 
 /**
- * People aren't that concerned about a little side effect, so focus on hospitalizations and deaths.
- * Display this first for context of REDUCING the bad outcomes
- * Should I get vaccine or not (ever)?
- *
- * No vaccine:
- *     🏥🏥🏥🏥🏥🏥🏥🏥🏥
- *  ️  ☠☠☠☠
- *
- * User wants to know: Should I get AZ or wait for Pfizer?
- * Can display "Get AZ now/Wait for Pfizer" binary decision (with see your GP disclaimer)
- * But by how much degree is it Get/Wait?
- *
- *
- * UI Like this... per 100,000
- * Your scenario:               Medium exposure risk:           High exposure risk:
- * AZ now:
- *    🏥🏥
- *  ️ ☠
- *
- * Wait for Pfizer:
- *    🏥🏥🏥
- *  ️ ☠
- *
- * People care about immediate risk - will I be in hospital in the next week?
- * They (rationally) should care about the overall outcome of the 2 scenarios we are comparing:
- * 1. AZ path - Get nowish - get second dose - catch covid in there sometime?
- * 2. Wait for Pfizer - get doses - catch covid anywhere in that period
- * I should calculate risk per day and average them over the time period
- *
- * The calculation for the binary choice would be to choose the minimum averaged risk over the scenario period
- *
- * Show comparison to risky activities like skydiving?
- * */
-
-
-/**
  * Really need to highlight the "No Vaccine option" should consider beyond the scenario timeline. You will eventually get covid
  * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
  * */

@@ -93,11 +93,8 @@ fun vaccinationScheduleEffectivenessOnDay(
     val firstDoseEffectivenessIncreasePeriod = timeUntilFirstDose..lastDayOfFirstDoseEffectivenessIncrease
     val lastDayOfSecondDoseEffectivenessIncrease = timeUntilSecondDose + Vaccine.timeUntilVaccinationEffective
     val secondDoseEffectivenessIncreasePeriod = timeUntilSecondDose..lastDayOfSecondDoseEffectivenessIncrease
-    val dayAfterFirstDoseFullyEffective = firstDoseEffectivenessIncreasePeriod.endInclusive + Duration.days(1)
-    val dayBeforeSecondDose = timeUntilSecondDose - Duration.days(1)
-    val firstDoseFullEffectivenessPeriod = dayAfterFirstDoseFullyEffective..dayBeforeSecondDose
-    val secondDoseFullEffectivenessPeriod =
-        (secondDoseEffectivenessIncreasePeriod.endInclusive + Duration.days(1))..lastDayOfScenario
+    val firstDoseFullEffectivenessPeriod = firstDoseEffectivenessIncreasePeriod.endInclusive..timeUntilSecondDose
+    val secondDoseFullEffectivenessPeriod = secondDoseEffectivenessIncreasePeriod.endInclusive..lastDayOfScenario
 
     return when (day) {
         in unvaccinatedPeriod -> Effectiveness.NONE
@@ -159,7 +156,7 @@ fun calculateCitizenPositiveChance(
 ): Double {
     val caseCountOnDay = caseCountForDay(
         environment.dailyCaseCountNow,
-        environment.dailyCaseCountAtEnd,
+        environment.dailyCaseCountAtScenarioEnd,
         scenarioDay,
         scenarioPeriod
     )

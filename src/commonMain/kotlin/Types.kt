@@ -122,7 +122,7 @@ data class VaccinationSchedule(
 
 data class VirusEnvironment(
     val dailyCaseCountNow: Long,
-    val dailyCaseCountAtEnd: Long,
+    val dailyCaseCountAtScenarioEnd: Long,
     val population: Long,
     val virus: Virus
 )

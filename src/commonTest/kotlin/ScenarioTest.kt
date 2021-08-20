@@ -20,14 +20,14 @@ class ScenarioTest {
 
     val virusEnvironmentQLD = VirusEnvironment(
         dailyCaseCountNow = 5,
-        dailyCaseCountAtEnd = 200,
+        dailyCaseCountAtScenarioEnd = 200,
         population = 2_700_000, // Brisbane and GC
         virus = CovidDelta
     )
 
     val virusEnvironmentNSW = VirusEnvironment(
         dailyCaseCountNow = 700,
-        dailyCaseCountAtEnd = 3000,
+        dailyCaseCountAtScenarioEnd = 3000,
         population = 5_000_000, // Sydney
         virus = CovidDelta
     )

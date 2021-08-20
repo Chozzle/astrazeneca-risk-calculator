@@ -102,17 +102,17 @@ enum class Gender { MALE, FEMALE, UNSPECIFIED }
 data class CitizenContext(
     val age: Int,
     val gender: Gender,
-    val vaccinationA: VaccineFirstDoseEvent,
-    val vaccinationB: VaccineFirstDoseEvent,
+    val vaccinationScheduleA: VaccinationSchedule,
+    val vaccinationScheduleB: VaccinationSchedule,
 ) {
     init {
-        if (vaccinationB.timeUntilFirstDose < vaccinationA.timeUntilFirstDose) {
+        if (vaccinationScheduleB.timeUntilFirstDose < vaccinationScheduleA.timeUntilFirstDose) {
             error("Calculation not valid for Vaccine B earlier than Vaccine A")
         }
     }
 }
 
-data class VaccineFirstDoseEvent(
+data class VaccinationSchedule(
     val vaccine: Vaccine,
     val timeUntilFirstDose: Duration
 ) {

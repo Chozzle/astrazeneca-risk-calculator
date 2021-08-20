@@ -6,8 +6,8 @@ import kotlin.time.Duration
  * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
  * */
 fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): EntireScenarioOutcome {
-    val timeUntilVaccineAFullEffectiveness = citizen.vaccinationA.timeUntilFullVaccineEffectiveness
-    val timeUntilVaccineBFullEffectiveness = citizen.vaccinationB.timeUntilFullVaccineEffectiveness
+    val timeUntilVaccineAFullEffectiveness = citizen.vaccinationScheduleA.timeUntilFullVaccineEffectiveness
+    val timeUntilVaccineBFullEffectiveness = citizen.vaccinationScheduleB.timeUntilFullVaccineEffectiveness
     val scenarioPeriod = maxDays(timeUntilVaccineAFullEffectiveness, timeUntilVaccineBFullEffectiveness)
 
     val accumulatedOutcome = calculateScenarioOutcome(citizen, environment, scenarioPeriod)
@@ -35,7 +35,7 @@ fun calculateScenarioOutcome(
         )
 
         val riskWithNoVaccine = noVaccineRiskIfInfected * chanceOfPositiveForDay
-        if (day < citizen.vaccinationA.timeUntilFirstDose.inWholeDays) {
+        if (day < citizen.vaccinationScheduleA.timeUntilFirstDose.inWholeDays) {
             return@map ScenarioOutcome(
                 noVaccineOutcome = riskWithNoVaccine,
                 vaccineAOutcome = VaccineScenarioOutcome(
@@ -49,15 +49,17 @@ fun calculateScenarioOutcome(
             )
         }
 
-        // Assume all risk occurs on the day of side effect onset. I can spread it over multiple days later if needing to graph more realistically.
+        // Assume all risk occurs on the day of vaccination. I can spread it over multiple days later if needing to graph more realistically.
         // Result for cumulative risk won't be affected by this assumption
-        val vaccinationASideEffectRiskForDay = vaccineRiskOnDay(dayAsDuration, citizen.vaccinationA, citizen.age)
-        val vaccinationBSideEffectRiskForDay = vaccineRiskOnDay(dayAsDuration, citizen.vaccinationB, citizen.age)
+        val vaccinationASideEffectRiskForDay =
+            vaccineRiskOnDay(dayAsDuration, citizen.vaccinationScheduleA, citizen.age)
+        val vaccinationBSideEffectRiskForDay =
+            vaccineRiskOnDay(dayAsDuration, citizen.vaccinationScheduleB, citizen.age)
 
         val vaccinationAEffectiveness =
-            vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationA, scenarioPeriod)
+            vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationScheduleA, scenarioPeriod)
         val vaccinationBEffectiveness =
-            vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationB, scenarioPeriod)
+            vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationScheduleB, scenarioPeriod)
         val vaccinationScheduleAResidualVirusRisk =
             riskWithNoVaccine.times(effectiveness = vaccinationAEffectiveness, age = citizen.age)
         val vaccinationScheduleBResidualVirusRisk =
@@ -79,7 +81,7 @@ fun calculateScenarioOutcome(
 
 fun vaccinationScheduleEffectivenessOnDay(
     day: Duration,
-    vaccineFirstDoseEvent: VaccineFirstDoseEvent,
+    vaccineFirstDoseEvent: VaccinationSchedule,
     lastDayOfScenario: Duration
 ): Effectiveness {
 
@@ -139,9 +141,9 @@ private fun calculateEffectivenessInPeriod(
 }
 
 
-private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccineEvent: VaccineFirstDoseEvent, age: Int) =
-    if (dayAsDuration == vaccineEvent.timeUntilFirstDose) {
-        vaccineEvent.vaccine.ageToSideEffectRisk(age)
+private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccinationSchedule: VaccinationSchedule, age: Int) =
+    if (dayAsDuration == vaccinationSchedule.timeUntilFirstDose) {
+        vaccinationSchedule.vaccine.ageToSideEffectRisk(age)
     } else {
         NONE
     }

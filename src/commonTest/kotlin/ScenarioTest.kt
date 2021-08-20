@@ -6,11 +6,11 @@ class ScenarioTest {
     val citizenContext = CitizenContext(
         age = 35,
         gender = Gender.FEMALE,
-        vaccinationA = VaccineFirstDoseEvent(
+        vaccinationScheduleA = VaccinationSchedule(
             vaccine = AstraZeneca,
             timeUntilFirstDose = Duration.days(3)
         ),
-        vaccinationB = VaccineFirstDoseEvent(
+        vaccinationScheduleB = VaccinationSchedule(
             vaccine = Pfizer,
 
             // https://www.smh.com.au/national/what-do-the-vaccine-reopening-targets-mean-and-when-is-all-the-pfizer-arriving-20210802-p58f1h.html
@@ -43,6 +43,7 @@ class ScenarioTest {
         println("  Covid causing fatality             :" + noVaccineLifetimeRisk.mortality * 100_000.0)
         println("  Covid causing hospitalization      :" + noVaccineLifetimeRisk.hospitalization * 100_000.0)
 
+        println()
         println("-- AstraZeneca now: --")
         println("  Covid causing fatality             : " + outcome.vaccineAOutcome.residualCovidRisk.mortality * 100_000.0)
         println("  Side effect causing fatality       : " + outcome.vaccineAOutcome.sideEffectRisk.mortality * 100_000.0)
@@ -51,6 +52,7 @@ class ScenarioTest {
         println("  Side effect causing hospitalisation: " + outcome.vaccineAOutcome.sideEffectRisk.hospitalization * 100_000.0)
         println("  Total hospitalization risk_________: " + outcome.vaccineAOutcome.totalRisk().hospitalization * 100_000.0)
 
+        println()
         println("-- Pfizer later: --")
         println("  Covid causing fatality             : " + outcome.vaccineBOutcome.residualCovidRisk.mortality * 100_000.0)
         println("  Side effect causing fatality       : " + outcome.vaccineBOutcome.sideEffectRisk.mortality * 100_000.0)
@@ -59,6 +61,7 @@ class ScenarioTest {
         println("  Side effect causing hospitalisation: " + outcome.vaccineBOutcome.sideEffectRisk.hospitalization * 100_000.0)
         println("  Total hospitalization risk_________: " + outcome.vaccineBOutcome.totalRisk().hospitalization * 100_000.0)
 
+        println()
     }
 
 }

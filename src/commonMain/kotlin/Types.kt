@@ -97,11 +97,11 @@ data class Risk(val hospitalization: Double, val mortality: Double) {
     }
 }
 
-enum class Gender { MALE, FEMALE, UNSPECIFIED }
+enum class Sex { MALE, FEMALE, UNSPECIFIED }
 
 data class CitizenContext(
     val age: Int,
-    val gender: Gender,
+    val sex: Sex,
     val vaccinationScheduleA: VaccinationSchedule,
     val vaccinationScheduleB: VaccinationSchedule,
 ) {
@@ -129,7 +129,7 @@ data class VirusEnvironment(
 
 interface Virus {
     fun ageToHospitalizationChance(age: Int): Double
-    fun ageToMortality(age: Int, gender: Gender): Double
+    fun ageToMortality(age: Int, sex: Sex): Double
 }
 
 data class ScenarioOutcome(

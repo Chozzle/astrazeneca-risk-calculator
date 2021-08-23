@@ -113,11 +113,11 @@ object CovidDelta : Virus {
         65..Int.MAX_VALUE to 5195.0 / 100_000,
     )
 
-    override fun ageToMortality(age: Int, gender: Gender): Double {
+    override fun ageToMortality(age: Int, sex: Sex): Double {
         // I think this is most accurate source based on CFR in Australian. We are basing the chance of infection on
         // number of cases so CFR will correlate better.
 
-        return caseFatalityRateAustralia(age, gender)
+        return caseFatalityRateAustralia(age, sex)
 //        return infectionFatalityRateWorld(age, gender)
 //        return ageToMortalityTableCDC.entries.find { (ageRange, _) ->
 //            age in ageRange
@@ -134,7 +134,7 @@ object CovidDelta : Virus {
         65..Int.MAX_VALUE to 1139.0 / 100_000,
     )
 
-    fun ageToMortalityAfterHospitalization(age: Int, gender: Gender): Double {
+    fun ageToMortalityAfterHospitalization(age: Int, sex: Sex): Double {
         return ageToHospitalizationChance(age)
     }
 
@@ -150,19 +150,19 @@ object CovidDelta : Virus {
      // been hospitalized.
      val hospitalizationChance = totalActiveHospitalized / activeCases*/
 
-    fun infectionFatalityRateWorld(age: Int, gender: Gender): Double {
-        return when (gender) {
-            Gender.MALE -> {
+    fun infectionFatalityRateWorld(age: Int, sex: Sex): Double {
+        return when (sex) {
+            Sex.MALE -> {
                 infectionFatalityRatePercentWorldMen.entries.find { (ageRange, _) ->
                     age in ageRange
                 }!!.value / 100
             }
-            Gender.FEMALE -> {
+            Sex.FEMALE -> {
                 infectionFatalityRatePercentWorldWomen.entries.find { (ageRange, _) ->
                     age in ageRange
                 }!!.value / 100
             }
-            Gender.UNSPECIFIED -> {
+            Sex.UNSPECIFIED -> {
                 val men = infectionFatalityRatePercentWorldMen.entries.find { (ageRange, _) ->
                     age in ageRange
                 }!!.value / 100
@@ -219,7 +219,7 @@ object CovidDelta : Virus {
         80..Int.MAX_VALUE to 6.0,
     )
 
-    fun caseFatalityRateAustralia(age: Int, gender: Gender): Double {
+    fun caseFatalityRateAustralia(age: Int, sex: Sex): Double {
         val totalCasesMale = totalCasesAustraliaMale.entries.find { (ageRange, _) ->
             age in ageRange
         }!!.value
@@ -235,10 +235,10 @@ object CovidDelta : Virus {
             age in ageRange
         }!!.value
 
-        return when (gender) {
-            Gender.MALE -> totalDeathsMale.toDouble() / totalCasesMale
-            Gender.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
-            Gender.UNSPECIFIED -> totalDeathsMale.toDouble() + totalDeathsFemale.toDouble() / totalCasesMale + totalCasesFemale
+        return when (sex) {
+            Sex.MALE -> totalDeathsMale.toDouble() / totalCasesMale
+            Sex.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
+            Sex.UNSPECIFIED -> totalDeathsMale.toDouble() + totalDeathsFemale.toDouble() / totalCasesMale + totalCasesFemale
         }
     }
 

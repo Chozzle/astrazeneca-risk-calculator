@@ -6,9 +6,7 @@ import kotlin.time.Duration
  * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
  * */
 fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): EntireScenarioOutcome {
-    val timeUntilVaccineAFullEffectiveness = citizen.vaccinationScheduleA.timeUntilFullVaccineEffectiveness
-    val timeUntilVaccineBFullEffectiveness = citizen.vaccinationScheduleB.timeUntilFullVaccineEffectiveness
-    val scenarioPeriod = maxDays(timeUntilVaccineAFullEffectiveness, timeUntilVaccineBFullEffectiveness)
+    val scenarioPeriod = calculateScenarioPeriod(citizen.vaccinationScheduleA, citizen.vaccinationScheduleB)
 
     val accumulatedOutcome = calculateScenarioOutcome(citizen, environment, scenarioPeriod)
         .reduce { accumulation, scenarioOutcome ->
@@ -23,7 +21,7 @@ fun calculateScenarioOutcome(
     scenarioPeriod: Duration
 ): List<ScenarioOutcome> {
 
-    val noVaccineRiskIfInfected = calculateNoVaccineRiskAfterInfection(citizen.age, citizen.gender, environment.virus)
+    val noVaccineRiskIfInfected = calculateNoVaccineRiskAfterInfection(citizen.age, citizen.sex, environment.virus)
 
     // I want to store each day's risk for later graphing possibly
     return (0..scenarioPeriod.inWholeDays).map { day ->
@@ -79,12 +77,22 @@ fun calculateScenarioOutcome(
     }
 }
 
+fun calculateScenarioPeriod(
+    vaccinationScheduleA: VaccinationSchedule,
+    vaccinationScheduleB: VaccinationSchedule
+): Duration {
+    val timeUntilVaccineAFullEffectiveness = vaccinationScheduleA.timeUntilFullVaccineEffectiveness
+    val timeUntilVaccineBFullEffectiveness = vaccinationScheduleB.timeUntilFullVaccineEffectiveness
+    return maxDays(timeUntilVaccineAFullEffectiveness, timeUntilVaccineBFullEffectiveness)
+}
+
 fun vaccinationScheduleEffectivenessOnDay(
     day: Duration,
     vaccineFirstDoseEvent: VaccinationSchedule,
     lastDayOfScenario: Duration
 ): Effectiveness {
 
+    // TODO move out of function so this is calculated once
     val timeUntilFirstDose = vaccineFirstDoseEvent.timeUntilFirstDose
     val vaccine = vaccineFirstDoseEvent.vaccine
     val timeUntilSecondDose = vaccineFirstDoseEvent.timeUntilFirstDose + vaccine.timeBetweenDoses
@@ -96,6 +104,12 @@ fun vaccinationScheduleEffectivenessOnDay(
     val firstDoseFullEffectivenessPeriod = firstDoseEffectivenessIncreasePeriod.endInclusive..timeUntilSecondDose
     val secondDoseFullEffectivenessPeriod = secondDoseEffectivenessIncreasePeriod.endInclusive..lastDayOfScenario
 
+
+    println(unvaccinatedPeriod)
+    println(firstDoseEffectivenessIncreasePeriod)
+    println(firstDoseFullEffectivenessPeriod)
+    println(secondDoseEffectivenessIncreasePeriod)
+    println(secondDoseFullEffectivenessPeriod)
     return when (day) {
         in unvaccinatedPeriod -> Effectiveness.NONE
         in firstDoseEffectivenessIncreasePeriod -> {
@@ -146,8 +160,8 @@ private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccinationSchedule: Vacci
     }
 
 
-fun calculateNoVaccineRiskAfterInfection(age: Int, gender: Gender, virus: Virus) =
-    Risk(hospitalization = virus.ageToHospitalizationChance(age), mortality = virus.ageToMortality(age, gender))
+fun calculateNoVaccineRiskAfterInfection(age: Int, sex: Sex, virus: Virus) =
+    Risk(hospitalization = virus.ageToHospitalizationChance(age), mortality = virus.ageToMortality(age, sex))
 
 fun calculateCitizenPositiveChance(
     scenarioDay: Duration,

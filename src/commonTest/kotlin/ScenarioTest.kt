@@ -5,7 +5,7 @@ import kotlin.time.Duration
 class ScenarioTest {
     val citizenContext = CitizenContext(
         age = 35,
-        gender = Gender.MALE,
+        sex = Sex.MALE,
         vaccinationScheduleA = VaccinationSchedule(
             vaccine = AstraZeneca,
             timeUntilFirstDose = Duration.days(3)
@@ -37,7 +37,7 @@ class ScenarioTest {
 
         val noVaccineLifetimeRisk = calculateNoVaccineRiskAfterInfection(
             citizenContext.age,
-            citizenContext.gender,
+            citizenContext.sex,
             virusEnvironmentQLD.virus
         )
         val accumulatedOutcomeForScenarioPeriodQld =

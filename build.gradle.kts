@@ -8,6 +8,7 @@ group = "io.github.chozzle"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    maven("https://jitpack.io")
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     google()
     mavenCentral()
@@ -43,6 +44,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("com.ionspin.kotlin:bignum:0.3.1")
+
             }
         }
         val commonTest by getting {

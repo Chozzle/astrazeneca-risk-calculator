@@ -1,10 +1,6 @@
 import Risk.Companion.NONE
 import kotlin.time.Duration
 
-/**
- * Really need to highlight the "No Vaccine option" should consider beyond the scenario timeline. You will eventually get covid
- * so the risk remains high for the rest of your life. I.e. I should NOT present these numbers as they are.
- * */
 fun accumulatedOutcomeForScenarioPeriod(citizen: CitizenContext, environment: VirusEnvironment): EntireScenarioOutcome {
     val scenarioPeriod = calculateScenarioPeriod(citizen.vaccinationScheduleA, citizen.vaccinationScheduleB)
 

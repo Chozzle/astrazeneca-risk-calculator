@@ -142,7 +142,7 @@ object WtTexts : StyleSheet(AppStylesheet) {
         color(Color("#fff"))
     }
 
-    val wtH3 by style {
+        val wtH3 by style {
         color(Color("#27282c"))
         fontSize(21.px)
         fontSize(AppCSSVariables.wtH3FontSize.value(20.px))

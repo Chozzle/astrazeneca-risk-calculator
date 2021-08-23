@@ -17,6 +17,7 @@ import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
 import org.jetbrains.compose.web.css.paddingTop
 import org.jetbrains.compose.web.css.px
+import org.jetbrains.compose.web.dom.A
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H1
@@ -24,7 +25,6 @@ import org.jetbrains.compose.web.dom.H3
 import org.jetbrains.compose.web.dom.Label
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.RadioInput
-import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.TextInput
 import org.jetbrains.compose.web.renderComposable
@@ -55,7 +55,7 @@ fun main() {
             VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7)),
             VaccinationSchedule(Pfizer, Duration.days(weeksUntilVaccinationB * 7)),
         )
-        val vaccineBRiskImprovementPer1000000 =
+        val vaccineBRiskImprovementPerMillion =
             currentOutcome?.let { calculateVaccineBRiskImprovementPerMillion(scenarioOutcome = it.scenarioOutcome) }
 
         Style(AppStylesheet)
@@ -63,6 +63,19 @@ fun main() {
         Layout {
             Heading()
             ContainerInSection(WtSections.wtSectionBgGrayLight) {
+                Div(attrs = {
+                    classes(WtTexts.wtText2)
+                    style {
+                        paddingBottom(32.px)
+                    }
+                }) {
+                    Text("See ")
+                    A("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt") {
+
+                        Text("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt")
+                    }
+                    Text(" for data sources and calculations")
+                }
 
                 InputField(label = "My age", value = age.toString(), onChange = { age = it.toInt() })
 
@@ -120,39 +133,39 @@ fun main() {
                     }
                 }
             }
-            Results(vaccineBRiskImprovementPer1000000)
+            Results(vaccineBRiskImprovementPerMillion)
         }
     }
 }
 
 @Composable
-private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
+private fun Results(vaccineBRiskImprovementPerMillion: Risk?) {
     ContainerInSection(WtSections.wtSection) {
-        if (vaccineBRiskImprovementPer100000 != null) {
+        if (vaccineBRiskImprovementPerMillion != null) {
             P {
                 val bestVaccine: Vaccine
                 val otherVaccine: Vaccine
-                if (vaccineBRiskImprovementPer100000.mortality > 0) {
+                if (vaccineBRiskImprovementPerMillion.mortality > 0) {
                     bestVaccine = Pfizer
                     otherVaccine = AstraZeneca
                 } else {
                     bestVaccine = AstraZeneca
                     otherVaccine = Pfizer
                 }
-                H3(attrs = { classes(WtTexts.wtSubtitle2) }) {
-                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario per one million people")
+                H3(attrs = { classes(WtTexts.wtH3) }) {
+                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario (per one million people)")
                 }
             }
 
             Div {
-                val roundedTo2Decimals = vaccineBRiskImprovementPer100000.mortality.absoluteValue.toBigDecimal(
+                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
                     decimalMode = DecimalMode(
                         2,
                         RoundingMode.TOWARDS_ZERO
                     )
                 )
-                val remainder = (vaccineBRiskImprovementPer100000.mortality % 1).absoluteValue
-                val characters = vaccineBRiskImprovementPer100000.mortality.toInt().absoluteValue
+                val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
                 val charactersHalved = characters / 2
                 val remainingCharacters = characters % 2
                 val emojiString =
@@ -164,14 +177,14 @@ private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
             }
 
             Div {
-                val roundedTo2Decimals = vaccineBRiskImprovementPer100000.hospitalization.absoluteValue.toBigDecimal(
+                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
                     decimalMode = DecimalMode(
                         2,
                         RoundingMode.TOWARDS_ZERO
                     )
                 )
-                val remainder = (vaccineBRiskImprovementPer100000.hospitalization % 1).absoluteValue
-                val characters = vaccineBRiskImprovementPer100000.hospitalization.toInt().absoluteValue
+                val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
                 val emojiString = "🏥".repeat(characters)
                 H3(attrs = { classes(WtTexts.wtText1) }) {
                     Text("${roundedTo2Decimals.toPlainString()} fewer hospitalizations")
@@ -266,6 +279,11 @@ fun Heading() {
                     WtOffsets.wtTopOffsetSm12
                 )
             }) {
+                P(attrs = {
+                    classes(WtTexts.wtText2)
+                }) {
+                    Text("Many Australians are wondering...")
+                }
                 H1(attrs = { classes(WtTexts.wtHero) }) {
                     Text("Should I get AstraZeneca now, or wait for Pfizer?")
                 }

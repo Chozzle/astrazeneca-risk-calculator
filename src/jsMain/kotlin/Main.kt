@@ -15,6 +15,7 @@ import org.jetbrains.compose.web.attributes.value
 import org.jetbrains.compose.web.css.Style
 import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
+import org.jetbrains.compose.web.css.paddingTop
 import org.jetbrains.compose.web.css.px
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
@@ -88,7 +89,11 @@ fun main() {
                     value = population.toString(),
                     onChange = { population = it.toLong() })
 
-                P {
+                P(attrs = {
+                    style {
+                        paddingTop(16.px)
+                    }
+                }) {
                     Button(attrs = {
                         onClick {
                             val vaccineScheduleA =
@@ -114,8 +119,8 @@ fun main() {
                         Text("Calculate")
                     }
                 }
-                Results(vaccineBRiskImprovementPer1000000)
             }
+            Results(vaccineBRiskImprovementPer1000000)
         }
     }
 }
@@ -135,7 +140,7 @@ private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
                     otherVaccine = Pfizer
                 }
                 H3(attrs = { classes(WtTexts.wtSubtitle2) }) {
-                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario, in one million people")
+                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario per one million people")
                 }
             }
 
@@ -153,7 +158,7 @@ private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
                 val emojiString =
                     "\uD83D\uDC83\uD83D\uDD7A".repeat(charactersHalved) + "\uD83D\uDC83".repeat(remainingCharacters)
                 H3(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("$roundedTo2Decimals fewer lives lost")
+                    Text("${roundedTo2Decimals.toPlainString()} fewer lives lost")
                 }
                 Text(emojiString)
             }
@@ -169,7 +174,7 @@ private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
                 val characters = vaccineBRiskImprovementPer100000.hospitalization.toInt().absoluteValue
                 val emojiString = "🏥".repeat(characters)
                 H3(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("$roundedTo2Decimals fewer hospitalizations")
+                    Text("${roundedTo2Decimals.toPlainString()} fewer hospitalizations")
                 }
                 Text(emojiString)
             }

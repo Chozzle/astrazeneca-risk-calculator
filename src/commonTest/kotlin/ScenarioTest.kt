@@ -5,7 +5,7 @@ import kotlin.time.Duration
 class ScenarioTest {
     val citizenContext = CitizenContext(
         age = 35,
-        sex = Sex.MALE,
+        sex = Sex.UNSPECIFIED,
         vaccinationScheduleA = VaccinationSchedule(
             vaccine = AstraZeneca,
             timeUntilFirstDose = Duration.days(3)

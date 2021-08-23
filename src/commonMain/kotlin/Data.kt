@@ -238,7 +238,7 @@ object CovidDelta : Virus {
         return when (sex) {
             Sex.MALE -> totalDeathsMale.toDouble() / totalCasesMale
             Sex.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
-            Sex.UNSPECIFIED -> totalDeathsMale.toDouble() + totalDeathsFemale.toDouble() / totalCasesMale + totalCasesFemale
+            Sex.UNSPECIFIED -> (totalDeathsMale.toDouble() + totalDeathsFemale.toDouble()) / (totalCasesMale + totalCasesFemale)
         }
     }
 

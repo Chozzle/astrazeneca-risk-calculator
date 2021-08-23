@@ -4,31 +4,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.ionspin.kotlin.bignum.decimal.DecimalMode
+import com.ionspin.kotlin.bignum.decimal.RoundingMode
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
+import kotlinext.js.asJsObject
 import org.jetbrains.compose.web.attributes.forId
 import org.jetbrains.compose.web.attributes.name
 import org.jetbrains.compose.web.attributes.size
 import org.jetbrains.compose.web.attributes.value
-import org.jetbrains.compose.web.attributes.width
-import org.jetbrains.compose.web.css.GridAutoFlow
 import org.jetbrains.compose.web.css.Style
 import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
-import org.jetbrains.compose.web.css.paddingTop
 import org.jetbrains.compose.web.css.px
-import org.jetbrains.compose.web.css.selectors.group
-import org.jetbrains.compose.web.css.selectors.id
-import org.jetbrains.compose.web.dom.Br
 import org.jetbrains.compose.web.dom.Button
-import org.jetbrains.compose.web.dom.Col
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H1
+import org.jetbrains.compose.web.dom.H3
 import org.jetbrains.compose.web.dom.Label
-import org.jetbrains.compose.web.dom.Li
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.RadioInput
+import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.TextInput
-import org.jetbrains.compose.web.dom.Ul
 import org.jetbrains.compose.web.renderComposable
 import style.AppStylesheet
 import style.WtCols
@@ -36,25 +33,30 @@ import style.WtOffsets
 import style.WtRows
 import style.WtSections
 import style.WtTexts
+import kotlin.math.absoluteValue
 import kotlin.time.Duration
-import kotlin.time.toDuration
 
 fun main() {
 
     renderComposable(rootElementId = "root") {
+        // Inputs
         var age by remember { mutableStateOf(30) }
         var dailyCases by remember { mutableStateOf(10L) }
         var dailyCasesScenarioEnd by remember { mutableStateOf(200L) }
         var population by remember { mutableStateOf(2_500_000L) }
-        var currentOutcome by remember { mutableStateOf<EntireScenarioOutcome?>(null) }
         var sex by remember { mutableStateOf(UNSPECIFIED) }
         var weeksUntilVaccinationA by remember { mutableStateOf(0) }
         var weeksUntilVaccinationB by remember { mutableStateOf(2 * 4) }
 
-        var scenarioPeriod = calculateScenarioPeriod(
+        // Outputs
+        var currentOutcome by remember { mutableStateOf<EntireScenarioOutcome?>(null) }
+        val scenarioPeriod = calculateScenarioPeriod(
             VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7)),
             VaccinationSchedule(Pfizer, Duration.days(weeksUntilVaccinationB * 7)),
         )
+        val vaccineBRiskImprovementPer1000000 =
+            currentOutcome?.let { calculateVaccineBRiskImprovementPerMillion(scenarioOutcome = it.scenarioOutcome) }
+
         Style(AppStylesheet)
 
         Layout {
@@ -106,19 +108,70 @@ fun main() {
                                 CovidDelta
                             )
                             currentOutcome = accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironment)
+                            println(currentOutcome?.asJsObject())
                         }
                     }) {
                         Text("Calculate")
                     }
                 }
-                Div {
-                    if (currentOutcome != null) {
-                        P {
-                            Text(currentOutcome.toString())
+                Results(vaccineBRiskImprovementPer1000000)
+            }
+        }
+    }
+}
 
-                        }
-                    }
+@Composable
+private fun Results(vaccineBRiskImprovementPer100000: Risk?) {
+    ContainerInSection(WtSections.wtSection) {
+        if (vaccineBRiskImprovementPer100000 != null) {
+            P {
+                val bestVaccine: Vaccine
+                val otherVaccine: Vaccine
+                if (vaccineBRiskImprovementPer100000.mortality > 0) {
+                    bestVaccine = Pfizer
+                    otherVaccine = AstraZeneca
+                } else {
+                    bestVaccine = AstraZeneca
+                    otherVaccine = Pfizer
                 }
+                H3(attrs = { classes(WtTexts.wtSubtitle2) }) {
+                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario, in one million people")
+                }
+            }
+
+            Div {
+                val roundedTo2Decimals = vaccineBRiskImprovementPer100000.mortality.absoluteValue.toBigDecimal(
+                    decimalMode = DecimalMode(
+                        2,
+                        RoundingMode.TOWARDS_ZERO
+                    )
+                )
+                val remainder = (vaccineBRiskImprovementPer100000.mortality % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPer100000.mortality.toInt().absoluteValue
+                val charactersHalved = characters / 2
+                val remainingCharacters = characters % 2
+                val emojiString =
+                    "\uD83D\uDC83\uD83D\uDD7A".repeat(charactersHalved) + "\uD83D\uDC83".repeat(remainingCharacters)
+                H3(attrs = { classes(WtTexts.wtText1) }) {
+                    Text("$roundedTo2Decimals fewer lives lost")
+                }
+                Text(emojiString)
+            }
+
+            Div {
+                val roundedTo2Decimals = vaccineBRiskImprovementPer100000.hospitalization.absoluteValue.toBigDecimal(
+                    decimalMode = DecimalMode(
+                        2,
+                        RoundingMode.TOWARDS_ZERO
+                    )
+                )
+                val remainder = (vaccineBRiskImprovementPer100000.hospitalization % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPer100000.hospitalization.toInt().absoluteValue
+                val emojiString = "🏥".repeat(characters)
+                H3(attrs = { classes(WtTexts.wtText1) }) {
+                    Text("$roundedTo2Decimals fewer hospitalizations")
+                }
+                Text(emojiString)
             }
         }
     }
@@ -136,18 +189,14 @@ private fun SexSelection(sex: Sex, sexSelected: (Sex) -> Unit) {
             paddingBottom(16.px)
         }
     }) {
-        RadioButton("Unspecified", checked = sex == UNSPECIFIED, onClick = {
-            console.log("Clicko")
-            sexSelected(UNSPECIFIED)
-        })
-
-        RadioButton("Male", checked = sex == MALE, onClick = { sexSelected(MALE) })
-        RadioButton("Female", checked = sex == FEMALE, onClick = { sexSelected(FEMALE) })
+        RadioButton("Unspecified", checked = sex == UNSPECIFIED, groupName = "sex") { sexSelected(UNSPECIFIED) }
+        RadioButton("Male", checked = sex == MALE, groupName = "sex") { sexSelected(MALE) }
+        RadioButton("Female", checked = sex == FEMALE, groupName = "sex") { sexSelected(FEMALE) }
     }
 }
 
 @Composable
-private fun RadioButton(label: String, checked: Boolean, onClick: () -> Unit, groupName: String = "sex") {
+private fun RadioButton(label: String, checked: Boolean, groupName: String, onClick: () -> Unit) {
     P(attrs = {
         style {
             paddingBottom(8.px)
@@ -158,9 +207,6 @@ private fun RadioButton(label: String, checked: Boolean, onClick: () -> Unit, gr
             value(label)
             name(groupName)
             onChange { onClick() }
-            style {
-                paddingRight(4.px)
-            }
         }
 
         Label(attrs = {

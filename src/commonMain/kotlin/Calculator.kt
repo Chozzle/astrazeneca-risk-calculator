@@ -104,12 +104,6 @@ fun vaccinationScheduleEffectivenessOnDay(
     val firstDoseFullEffectivenessPeriod = firstDoseEffectivenessIncreasePeriod.endInclusive..timeUntilSecondDose
     val secondDoseFullEffectivenessPeriod = secondDoseEffectivenessIncreasePeriod.endInclusive..lastDayOfScenario
 
-
-    println(unvaccinatedPeriod)
-    println(firstDoseEffectivenessIncreasePeriod)
-    println(firstDoseFullEffectivenessPeriod)
-    println(secondDoseEffectivenessIncreasePeriod)
-    println(secondDoseFullEffectivenessPeriod)
     return when (day) {
         in unvaccinatedPeriod -> Effectiveness.NONE
         in firstDoseEffectivenessIncreasePeriod -> {
@@ -185,4 +179,11 @@ fun caseCountForDay(startCaseCount: Long, endCaseCount: Long, day: Duration, sce
         end = endCaseCount,
         amount = day / scenarioPeriod
     )
+}
+
+/**
+ * @returns a positive number if vaccine B has less risk than vaccine A
+ */
+fun calculateVaccineBRiskImprovementPerMillion(scenarioOutcome: ScenarioOutcome): Risk {
+    return (scenarioOutcome.vaccineAOutcome.totalRisk() - scenarioOutcome.vaccineBOutcome.totalRisk()) * 1_000_000.0
 }

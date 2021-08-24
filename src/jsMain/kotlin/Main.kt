@@ -193,10 +193,7 @@ private fun Results(vaccineBRiskImprovementPerMillion: Risk?, weeksUntilVaccineA
                 )
                 val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
                 val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
-                val charactersHalved = characters / 2
-                val remainingCharacters = characters % 2
-                val emojiString =
-                    "\uD83D\uDC83\uD83D\uDD7A".repeat(charactersHalved) + "\uD83D\uDC83".repeat(remainingCharacters)
+                val emojiString = "\uD83D\uDE05".repeat(characters)
                 H3(attrs = { classes(WtTexts.wtText1) }) {
                     Text("${roundedTo2Decimals.toPlainString()} fewer lives lost")
                 }

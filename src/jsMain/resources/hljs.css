@@ -56,3 +56,13 @@
 .hljs-strong {
     font-weight: 700
 }
+
+percentText {
+  display: inline-block;
+  font-family: helvetica, arial, sans-serif;
+  font-weight: bold;
+  font-size: 300px;
+  background: linear-gradient(to right, #00000000 50%,#1e5799 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

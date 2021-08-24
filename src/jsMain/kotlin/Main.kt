@@ -14,6 +14,7 @@ import org.jetbrains.compose.web.attributes.name
 import org.jetbrains.compose.web.attributes.size
 import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.attributes.value
+import org.jetbrains.compose.web.css.CSSColorValue
 import org.jetbrains.compose.web.css.DisplayStyle
 import org.jetbrains.compose.web.css.Style
 import org.jetbrains.compose.web.css.color
@@ -26,6 +27,7 @@ import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
 import org.jetbrains.compose.web.css.paddingTop
 import org.jetbrains.compose.web.css.px
+import org.jetbrains.compose.web.css.rgb
 import org.jetbrains.compose.web.css.rgba
 import org.jetbrains.compose.web.dom.A
 import org.jetbrains.compose.web.dom.Button
@@ -53,12 +55,12 @@ fun main() {
     renderComposable(rootElementId = "root") {
         // Inputs
         var age by remember { mutableStateOf(30) }
-        var dailyCases by remember { mutableStateOf(10L) }
-        var dailyCasesScenarioEnd by remember { mutableStateOf(200L) }
-        var population by remember { mutableStateOf(2_500_000L) }
         var sex by remember { mutableStateOf(UNSPECIFIED) }
         var weeksUntilVaccinationA by remember { mutableStateOf(0) }
-        var weeksUntilVaccinationB by remember { mutableStateOf(2 * 4) }
+        var weeksUntilVaccinationB by remember { mutableStateOf(4) }
+        var population by remember { mutableStateOf(8_000_000L) }
+        var dailyCases by remember { mutableStateOf(750L) }
+        var dailyCasesScenarioEnd by remember { mutableStateOf(1000L) }
         val virus = CovidDelta
 
         // Outputs
@@ -67,13 +69,8 @@ fun main() {
             VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7)),
             VaccinationSchedule(Pfizer, Duration.days(weeksUntilVaccinationB * 7)),
         )
-        val vaccineBRiskImprovementPerMillion =
-            currentOutcome?.let { calculateVaccineBRiskImprovementPerMillion(scenarioOutcome = it.scenarioOutcome) }
-        val noVaccineLifetimeRisk = calculateNoVaccineRiskAfterInfection(
-            age,
-            sex,
-            virus
-        )
+        var vaccineBRiskImprovementPerMillion by remember { mutableStateOf<Risk?>(null) }
+        var additionalRiskComparedToVaccine by remember { mutableStateOf<Risk?>(null) }
 
         Style(AppStylesheet)
 
@@ -86,25 +83,25 @@ fun main() {
                 SexSelection(sex, sexSelected = { sex = it })
 
                 InputField(
-                    label = "Weeks until I can receive the first AstraZeneca dose",
+                    label = "Weeks until I can receive my first AstraZeneca dose",
                     value = weeksUntilVaccinationA.toString(),
                     onChange = { weeksUntilVaccinationA = it.toInt() })
                 InputField(
-                    label = "Weeks until I can receive the first Pfizer dose (my best estimate)",
+                    label = "Weeks until I can receive my first Pfizer dose (my best estimate)",
                     value = weeksUntilVaccinationB.toString(),
                     onChange = { weeksUntilVaccinationB = it.toInt() })
-                InputField(
-                    label = "Daily COVID-19 cases in my area today",
-                    value = dailyCases.toString(),
-                    onChange = { dailyCases = it.toLong() })
-                InputField(
-                    label = "My estimate of daily COVID-19 cases at the end of comparison (after ${scenarioPeriod.inWholeDays / 7} weeks)",
-                    value = dailyCasesScenarioEnd.toString(),
-                    onChange = { dailyCasesScenarioEnd = it.toLong() })
                 InputField(
                     label = "Population in my area - where cases are appearing, for example, my state or city",
                     value = population.toString(),
                     onChange = { population = it.toLong() })
+                InputField(
+                    label = "Daily COVID-19 cases in that area today",
+                    value = dailyCases.toString(),
+                    onChange = { dailyCases = it.toLong() })
+                InputField(
+                    label = "My estimate of daily COVID-19 cases at the end of the comparison (after ${scenarioPeriod.inWholeDays / 7} weeks)",
+                    value = dailyCasesScenarioEnd.toString(),
+                    onChange = { dailyCasesScenarioEnd = it.toLong() })
 
                 P(attrs = {
                     style {
@@ -117,24 +114,48 @@ fun main() {
                             minHeight(40.px)
                         }
                         onClick {
+                            println("A")
                             val vaccineScheduleA =
                                 VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7))
+                            println("B")
                             val vaccineScheduleB =
                                 VaccinationSchedule(Pfizer, Duration.days(weeksUntilVaccinationB * 7))
+                            println("C")
                             val citizenContext = CitizenContext(
                                 age,
                                 sex,
                                 vaccineScheduleA,
                                 vaccineScheduleB
                             )
+                            println("D")
                             val virusEnvironment = VirusEnvironment(
                                 dailyCases,
                                 dailyCasesScenarioEnd,
                                 population = population,
                                 CovidDelta
                             )
+                            println("E")
                             currentOutcome = accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironment)
                             println(currentOutcome?.asJsObject())
+                            vaccineBRiskImprovementPerMillion =
+                                calculateVaccineBRiskImprovementPerMillion(scenarioOutcome = currentOutcome!!.scenarioOutcome)
+
+                            val bestVaccine: Vaccine
+                            val bestVaccineOutcome: VaccineScenarioOutcome
+                            if (vaccineBRiskImprovementPerMillion!!.mortality > 0) {
+                                bestVaccine = Pfizer
+                                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineBOutcome
+                            } else {
+                                bestVaccine = AstraZeneca
+                                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineAOutcome
+                            }
+                            additionalRiskComparedToVaccine = calculateAdditionalRiskOfNoVaccineComparedToVaccine(
+                                bestVaccine,
+                                bestVaccineOutcome,
+                                age,
+                                sex,
+                                virus
+                            )
                         }
                     }) {
                         H3(attrs = {
@@ -146,31 +167,12 @@ fun main() {
                 }
             }
 
-            if (vaccineBRiskImprovementPerMillion == null) return@Layout
-            if (currentOutcome == null) return@Layout
-            val bestVaccine: Vaccine
-            val bestVaccineOutcome: VaccineScenarioOutcome
-            if (vaccineBRiskImprovementPerMillion.mortality > 0) {
-                bestVaccine = Pfizer
-                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineBOutcome
-            } else {
-                bestVaccine = AstraZeneca
-                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineAOutcome
-            }
-            val additionalRiskComparedToVaccine =
-                calculateAdditionalRiskOfNoVaccineComparedToVaccine(
-                    bestVaccine,
-                    bestVaccineOutcome,
-                    age,
-                    sex,
-                    virus
-                )
-
+            val additionalRisk = additionalRiskComparedToVaccine ?: return@Layout
             Results(
                 vaccineBRiskImprovementPerMillion = vaccineBRiskImprovementPerMillion,
                 weeksUntilVaccineA = weeksUntilVaccinationA,
                 weeksUntilVaccineB = weeksUntilVaccinationB,
-                amountMoreDeathsIfVaccineNotTakenPerMillion = additionalRiskComparedToVaccine.mortality * 1_000_000
+                amountMoreDeathsIfVaccineNotTakenPerMillion = additionalRisk.mortality * 1_000_000
             )
         }
     }
@@ -222,7 +224,7 @@ private fun Results(
             H3(attrs = { classes(WtTexts.wtH3) }) {
                 val weeksUntilVaccineBString =
                     if (weeksUntilVaccineA == 0) "now" else "$weeksUntilVaccineA weeks"
-                Text("This risk calculation suggests getting ${bestVaccine.name} $weeksBestVaccineString")
+                Text("This risk calculation suggests ${if (bestVaccine == Pfizer) "waiting for" else "getting"} ${bestVaccine.name}")
             }
         }
         P(attrs = {
@@ -434,6 +436,10 @@ fun InputField(label: String, value: String, onChange: (String) -> Unit) {
                         }
                         size(9)
                         type(InputType.Number)
+                        style {
+                            classes(WtTexts.wtText1)
+                            color(rgb(0, 0, 0))
+                        }
                     }
                 )
             }
@@ -471,10 +477,10 @@ fun Heading() {
                 H1(attrs = {
                     classes(WtTexts.wtHero)
                     style {
-                        paddingBottom(16.px)
+                        paddingBottom(32.px)
                     }
                 }) {
-                    Text("Should I get AstraZeneca now, or wait for Pfizer?")
+                    Text("Should I get AstraZeneca now or wait for Pfizer?")
                 }
                 P {
                     LinkToGithub()

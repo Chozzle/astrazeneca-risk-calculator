@@ -16,6 +16,7 @@ import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.attributes.value
 import org.jetbrains.compose.web.css.DisplayStyle
 import org.jetbrains.compose.web.css.Style
+import org.jetbrains.compose.web.css.color
 import org.jetbrains.compose.web.css.display
 import org.jetbrains.compose.web.css.maxWidth
 import org.jetbrains.compose.web.css.minHeight
@@ -25,6 +26,7 @@ import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
 import org.jetbrains.compose.web.css.paddingTop
 import org.jetbrains.compose.web.css.px
+import org.jetbrains.compose.web.css.rgba
 import org.jetbrains.compose.web.dom.A
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
@@ -84,19 +86,19 @@ fun main() {
                 SexSelection(sex, sexSelected = { sex = it })
 
                 InputField(
-                    label = "Weeks until I can receive the AstraZeneca vaccine",
+                    label = "Weeks until I can receive the first AstraZeneca dose",
                     value = weeksUntilVaccinationA.toString(),
                     onChange = { weeksUntilVaccinationA = it.toInt() })
                 InputField(
-                    label = "Weeks until I can receive the Pfizer vaccine",
+                    label = "Weeks until I can receive the first Pfizer dose (my best estimate)",
                     value = weeksUntilVaccinationB.toString(),
                     onChange = { weeksUntilVaccinationB = it.toInt() })
                 InputField(
-                    label = "Daily covid cases in my area today",
+                    label = "Daily COVID-19 cases in my area today",
                     value = dailyCases.toString(),
                     onChange = { dailyCases = it.toLong() })
                 InputField(
-                    label = "Daily Covid cases at the end of comparison (after ${scenarioPeriod.inWholeDays / 7} weeks)",
+                    label = "My estimate of daily COVID-19 cases at the end of comparison (after ${scenarioPeriod.inWholeDays / 7} weeks)",
                     value = dailyCasesScenarioEnd.toString(),
                     onChange = { dailyCasesScenarioEnd = it.toLong() })
                 InputField(
@@ -179,7 +181,7 @@ private fun LinkToGithub() {
     Div(attrs = {
         classes(WtTexts.wtText2)
     }) {
-        Text("This calculator compares the two scenarios of getting the AstraZeneca vaccine now, vs waiting for Pfizer. The comparison ends when both doses of both vaccines would be fully effective. Australian case numbers and deaths are used to calculate Covid risk, and ATAGI data is used to calculate side effect risks. See ")
+        Text("This calculator compares the two scenarios of getting the AstraZeneca vaccine now versus waiting for Pfizer. Australian case numbers and deaths are used to calculate COVID-19 risk, and data from the Australian Technical Advisory Group on Immunisation is used to calculate side effect risks. The comparison ends when both doses of both vaccines would be fully effective. See ")
         A("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt") {
             Text("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt")
         }
@@ -229,7 +231,7 @@ private fun Results(
                 paddingBottom(16.px)
             }
         }) {
-            Text("The calculation is based on outcomes for people with average health. Use this for information purposes. See your GP to discuss your unique circumstances")
+            Text("The calculation is based on outcomes for people with average health. Use this for information purposes only. See your GP to discuss your unique circumstances.")
         }
 
         Div(attrs = {
@@ -248,8 +250,13 @@ private fun Results(
             val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
             val emojiString = "\uD83D\uDE05".repeat(characters)
 
-            H3(attrs = { classes(WtTexts.wtText1) }) {
-                Text("${roundedTo2Decimals.toPlainString()} fewer lives lost than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people)")
+            H3(attrs = {
+                classes(WtTexts.wtText1)
+                style {
+                    color(rgba(0, 0, 0, 1))
+                }
+            }) {
+                Text("Getting ${bestVaccine.name} should mean ${roundedTo2Decimals.toPlainString()} fewer lives lost than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people like you)")
             }
             P {
                 Span(attrs = {
@@ -290,8 +297,13 @@ private fun Results(
             val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
             val emojiString = "🏥".repeat(characters)
 
-            H3(attrs = { classes(WtTexts.wtText1) }) {
-                Text("${roundedTo2Decimals.toPlainString()} fewer hospitalisations than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people)")
+            H3(attrs = {
+                classes(WtTexts.wtText1)
+                style {
+                    color(rgba(0, 0, 0, 1))
+                }
+            }) {
+                Text("Getting ${bestVaccine.name} should mean ${roundedTo2Decimals.toPlainString()} fewer hospitalisations than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people like you)")
             }
             P {
                 Span(attrs = {
@@ -322,9 +334,14 @@ private fun Results(
             }
         }) {
             val characters = amountMoreDeathsIfVaccineNotTakenPerMillion.toInt()
-            val emojiString = "\uD83D\uDE35".repeat(characters)
-            H3(attrs = { classes(WtTexts.wtText1) }) {
-                Text("For comparison, not getting any vaccine ever will result in $characters more lives lost (per million people)")
+            val emojiString = "\uD83D\uDE05".repeat(characters)
+            H3(attrs = {
+                classes(WtTexts.wtText1)
+                style {
+                    color(rgba(0, 0, 0, 1))
+                }
+            }) {
+                Text("Getting ${bestVaccine.name} should mean $characters fewer lives lost compared to not getting a vaccine (per million people like you)")
             }
             Span(attrs = {
                 classes(WtTexts.wtText1)
@@ -454,7 +471,7 @@ fun Heading() {
                 H1(attrs = {
                     classes(WtTexts.wtHero)
                     style {
-                        paddingBottom(12.px)
+                        paddingBottom(16.px)
                     }
                 }) {
                     Text("Should I get AstraZeneca now, or wait for Pfizer?")

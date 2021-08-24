@@ -55,9 +55,9 @@ fun calculateScenarioOutcome(
         val vaccinationBEffectiveness =
             vaccinationScheduleEffectivenessOnDay(dayAsDuration, citizen.vaccinationScheduleB, scenarioPeriod)
         val vaccinationScheduleAResidualVirusRisk =
-            riskWithNoVaccine.times(effectiveness = vaccinationAEffectiveness, age = citizen.age)
+            riskWithNoVaccine * vaccinationAEffectiveness
         val vaccinationScheduleBResidualVirusRisk =
-            riskWithNoVaccine.times(effectiveness = vaccinationBEffectiveness, age = citizen.age)
+            riskWithNoVaccine * vaccinationBEffectiveness
 
         return@map ScenarioOutcome(
             noVaccineOutcome = riskWithNoVaccine,
@@ -152,6 +152,19 @@ private fun vaccineRiskOnDay(dayAsDuration: Duration, vaccinationSchedule: Vacci
 
 fun calculateNoVaccineRiskAfterInfection(age: Int, sex: Sex, virus: Virus) =
     Risk(hospitalization = virus.ageToHospitalizationChance(age), mortality = virus.ageToMortality(age, sex))
+
+fun calculateAdditionalRiskOfNoVaccineComparedToVaccine(
+    vaccine: Vaccine,
+    vaccineScenarioOutcome: VaccineScenarioOutcome,
+    age: Int,
+    sex: Sex,
+    virus: Virus
+): Risk {
+    val totalRiskUnvaccinated = calculateNoVaccineRiskAfterInfection(age, sex, virus)
+    val totalRiskVaccinated = vaccineScenarioOutcome.totalRisk() +
+            (totalRiskUnvaccinated * vaccine.secondDoseEffectiveness())
+    return totalRiskUnvaccinated - totalRiskVaccinated
+}
 
 fun calculateCitizenPositiveChance(
     scenarioDay: Duration,

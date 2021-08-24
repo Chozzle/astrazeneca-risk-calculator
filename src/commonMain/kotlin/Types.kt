@@ -25,7 +25,7 @@ data class Effectiveness(
     val effectiveness: Double,
     val hospitalizationEffectiveness: Double,
 ) {
-    fun mortalityEffectiveness(age: Int): Double {
+    fun mortalityEffectiveness(): Double {
 
         return hospitalizationEffectiveness
         // Can't find data on this. Best effort is to calculate based on general mortality after hospitalization
@@ -86,10 +86,10 @@ data class Risk(val hospitalization: Double, val mortality: Double) {
     operator fun minus(other: Risk): Risk = Risk(hospitalization - other.hospitalization, mortality - other.mortality)
     operator fun times(other: Risk): Risk = Risk(hospitalization * other.hospitalization, mortality * other.mortality)
     operator fun times(likelihood: Double): Risk = Risk(hospitalization * likelihood, mortality * likelihood)
-    fun times(effectiveness: Effectiveness, age: Int): Risk =
+    operator fun times(effectiveness: Effectiveness): Risk =
         Risk(
             hospitalization = hospitalization * (1 - effectiveness.hospitalizationEffectiveness),
-            mortality = mortality * (1 - effectiveness.mortalityEffectiveness(age))
+            mortality = mortality * (1 - effectiveness.mortalityEffectiveness())
         )
 
     companion object {

@@ -14,7 +14,13 @@ import org.jetbrains.compose.web.attributes.name
 import org.jetbrains.compose.web.attributes.size
 import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.attributes.value
+import org.jetbrains.compose.web.css.DisplayStyle
 import org.jetbrains.compose.web.css.Style
+import org.jetbrains.compose.web.css.display
+import org.jetbrains.compose.web.css.maxWidth
+import org.jetbrains.compose.web.css.minHeight
+import org.jetbrains.compose.web.css.minWidth
+import org.jetbrains.compose.web.css.overflow
 import org.jetbrains.compose.web.css.paddingBottom
 import org.jetbrains.compose.web.css.paddingRight
 import org.jetbrains.compose.web.css.paddingTop
@@ -27,6 +33,7 @@ import org.jetbrains.compose.web.dom.H3
 import org.jetbrains.compose.web.dom.Label
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.RadioInput
+import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.TextInput
 import org.jetbrains.compose.web.renderComposable
@@ -50,6 +57,7 @@ fun main() {
         var sex by remember { mutableStateOf(UNSPECIFIED) }
         var weeksUntilVaccinationA by remember { mutableStateOf(0) }
         var weeksUntilVaccinationB by remember { mutableStateOf(2 * 4) }
+        val virus = CovidDelta
 
         // Outputs
         var currentOutcome by remember { mutableStateOf<EntireScenarioOutcome?>(null) }
@@ -62,7 +70,7 @@ fun main() {
         val noVaccineLifetimeRisk = calculateNoVaccineRiskAfterInfection(
             age,
             sex,
-            CovidDelta
+            virus
         )
 
         Style(AppStylesheet)
@@ -70,19 +78,6 @@ fun main() {
         Layout {
             Heading()
             ContainerInSection(WtSections.wtSectionBgGrayLight) {
-                Div(attrs = {
-                    classes(WtTexts.wtText2)
-                    style {
-                        paddingBottom(32.px)
-                    }
-                }) {
-                    Text("See ")
-                    A("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt") {
-
-                        Text("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt")
-                    }
-                    Text(" for data sources and calculations")
-                }
 
                 InputField(label = "My age", value = age.toString(), onChange = { age = it.toInt() })
 
@@ -115,6 +110,10 @@ fun main() {
                     }
                 }) {
                     Button(attrs = {
+                        style {
+                            minWidth(120.px)
+                            minHeight(40.px)
+                        }
                         onClick {
                             val vaccineScheduleA =
                                 VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7))
@@ -136,101 +135,200 @@ fun main() {
                             println(currentOutcome?.asJsObject())
                         }
                     }) {
-                        Text("Calculate")
+                        H3(attrs = {
+                            classes(WtTexts.wtH3)
+                        }) {
+                            Text("Calculate")
+                        }
                     }
                 }
             }
-            Results(vaccineBRiskImprovementPerMillion, weeksUntilVaccinationA, weeksUntilVaccinationB, noVaccineLifetimeRisk.mortality * 1_000_000)
+
+            if (vaccineBRiskImprovementPerMillion == null) return@Layout
+            if (currentOutcome == null) return@Layout
+            val bestVaccine: Vaccine
+            val bestVaccineOutcome: VaccineScenarioOutcome
+            if (vaccineBRiskImprovementPerMillion.mortality > 0) {
+                bestVaccine = Pfizer
+                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineBOutcome
+            } else {
+                bestVaccine = AstraZeneca
+                bestVaccineOutcome = currentOutcome!!.scenarioOutcome.vaccineAOutcome
+            }
+            val additionalRiskComparedToVaccine =
+                calculateAdditionalRiskOfNoVaccineComparedToVaccine(
+                    bestVaccine,
+                    bestVaccineOutcome,
+                    age,
+                    sex,
+                    virus
+                )
+
+            Results(
+                vaccineBRiskImprovementPerMillion = vaccineBRiskImprovementPerMillion,
+                weeksUntilVaccineA = weeksUntilVaccinationA,
+                weeksUntilVaccineB = weeksUntilVaccinationB,
+                amountMoreDeathsIfVaccineNotTakenPerMillion = additionalRiskComparedToVaccine.mortality * 1_000_000
+            )
         }
     }
 }
 
 @Composable
-private fun Results(vaccineBRiskImprovementPerMillion: Risk?, weeksUntilVaccineA: Int, weeksUntilVaccineB: Int, covidDeathsPerMillion: Double) {
+private fun LinkToGithub() {
+    Div(attrs = {
+        classes(WtTexts.wtText2)
+    }) {
+        Text("This calculator compares the two scenarios of getting the AstraZeneca vaccine now, vs waiting for Pfizer. The comparison ends when both doses of both vaccines would be fully effective. Australian case numbers and deaths are used to calculate Covid risk, and ATAGI data is used to calculate side effect risks. See ")
+        A("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt") {
+            Text("https://github.com/Chozzle/astrazeneca-risk-calculator/blob/master/src/commonMain/kotlin/Data.kt")
+        }
+        Text(" for data sources and calculations. ")
+    }
+}
+
+@Composable
+private fun Results(
+    vaccineBRiskImprovementPerMillion: Risk?,
+    weeksUntilVaccineA: Int,
+    weeksUntilVaccineB: Int,
+    amountMoreDeathsIfVaccineNotTakenPerMillion: Double
+) {
     ContainerInSection(WtSections.wtSection) {
-        if (vaccineBRiskImprovementPerMillion != null) {
-            P(attrs = {
-                style {
-                    paddingBottom(16.px)
-                }
-            }) {
-                val bestVaccine: Vaccine
-                val otherVaccine: Vaccine
-                val weeksBestVaccineString: String
-                val weeksOtherVaccineString: String
+        if (vaccineBRiskImprovementPerMillion == null) return@ContainerInSection
+        val bestVaccine: Vaccine
+        val otherVaccine: Vaccine
+        val weeksBestVaccineString: String
+        val weeksOtherVaccineString: String
 
-                if (vaccineBRiskImprovementPerMillion.mortality > 0) {
-                    bestVaccine = Pfizer
-                    weeksBestVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
-                    otherVaccine = AstraZeneca
-                    weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+        if (vaccineBRiskImprovementPerMillion.mortality > 0) {
+            bestVaccine = Pfizer
+            weeksBestVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+            otherVaccine = AstraZeneca
+            weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
 
-                } else {
-                    bestVaccine = AstraZeneca
-                    weeksBestVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+        } else {
+            bestVaccine = AstraZeneca
+            weeksBestVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
 
-                    otherVaccine = Pfizer
-                    weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+            otherVaccine = Pfizer
+            weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+        }
 
-                }
-                H3(attrs = { classes(WtTexts.wtH3) }) {
-                    val weeksUntilVaccineBString = if (weeksUntilVaccineA == 0) "now" else "$weeksUntilVaccineA weeks"
-                    Text("Getting ${bestVaccine.name} $weeksBestVaccineString should have these benefits compared to getting ${otherVaccine.name} $weeksOtherVaccineString (per one million people)")
-                }
+        P(attrs = {
+        }) {
+            H3(attrs = { classes(WtTexts.wtH3) }) {
+                val weeksUntilVaccineBString =
+                    if (weeksUntilVaccineA == 0) "now" else "$weeksUntilVaccineA weeks"
+                Text("This risk calculation suggests getting ${bestVaccine.name} $weeksBestVaccineString")
             }
+        }
+        P(attrs = {
+            classes(WtTexts.wtText2)
+            style {
+                paddingBottom(16.px)
+            }
+        }) {
+            Text("The calculation is based on outcomes for people with average health. Use this for information purposes. See your GP to discuss your unique circumstances")
+        }
 
-            P(attrs = {
-                style {
-                    paddingBottom(16.px)
-                }
-            }) {
-                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
-                    decimalMode = DecimalMode(
-                        3,
-                        RoundingMode.TOWARDS_ZERO,
-                        scale = 2
-                    )
+        Div(attrs = {
+            style {
+                paddingBottom(16.px)
+            }
+        }) {
+            val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
+                decimalMode = DecimalMode(
+                    3,
+                    RoundingMode.TOWARDS_ZERO,
+                    scale = 2
                 )
-                val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
-                val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
-                val emojiString = "\uD83D\uDE05".repeat(characters)
-                H3(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("${roundedTo2Decimals.toPlainString()} fewer lives lost")
-                }
-                Text(emojiString)
-            }
+            )
+            val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
+            val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
+            val emojiString = "\uD83D\uDE05".repeat(characters)
 
-            P(attrs = {
-                style {
-                    paddingBottom(16.px)
+            H3(attrs = { classes(WtTexts.wtText1) }) {
+                Text("${roundedTo2Decimals.toPlainString()} fewer lives lost than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people)")
+            }
+            P {
+                Span(attrs = {
+                    classes(WtTexts.wtText1)
+                    style {
+                        overflow("hidden") // Fix line height mismatch
+                        display(DisplayStyle.InlineBlock)
+                    }
+                }) {
+                    Text(emojiString)
                 }
-            }) {
-                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
-                    decimalMode = DecimalMode(
-                        3,
-                        RoundingMode.TOWARDS_ZERO,
-                        scale = 2
-                    )
+
+                val emojiWidthPx = 20
+                Span(attrs = {
+                    classes(WtTexts.partialHiddenCharacter)
+                    style {
+                        maxWidth((remainder * emojiWidthPx).px)
+                    }
+                }) {
+                    Text("\uD83D\uDE05")
+                }
+            }
+        }
+
+        Div(attrs = {
+            style {
+                paddingBottom(16.px)
+            }
+        }) {
+            val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
+                decimalMode = DecimalMode(
+                    3,
+                    RoundingMode.TOWARDS_ZERO,
+                    scale = 2
                 )
-                val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
-                val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
-                val emojiString = "🏥".repeat(characters)
-                Div(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("${roundedTo2Decimals.toPlainString()} fewer hospitalisations")
-                }
-                Text(emojiString)
-            }
+            )
+            val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
+            val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
+            val emojiString = "🏥".repeat(characters)
 
-            P(attrs = {
-                style {
-                    paddingBottom(16.px)
+            H3(attrs = { classes(WtTexts.wtText1) }) {
+                Text("${roundedTo2Decimals.toPlainString()} fewer hospitalisations than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people)")
+            }
+            P {
+                Span(attrs = {
+                    classes(WtTexts.wtText1)
+                    style {
+                        overflow("hidden") // Fix line height mismatch
+                        display(DisplayStyle.InlineBlock)
+                    }
+                }) {
+                    Text(emojiString)
                 }
+
+                val emojiWidthPx = 20
+                Span(attrs = {
+                    classes(WtTexts.partialHiddenCharacter)
+                    style {
+                        maxWidth((remainder * emojiWidthPx).px)
+                    }
+                }) {
+                    Text("🏥")
+                }
+            }
+        }
+
+        Div(attrs = {
+            style {
+                paddingBottom(16.px)
+            }
+        }) {
+            val characters = amountMoreDeathsIfVaccineNotTakenPerMillion.toInt()
+            val emojiString = "\uD83D\uDE35".repeat(characters)
+            H3(attrs = { classes(WtTexts.wtText1) }) {
+                Text("For comparison, not getting any vaccine ever will result in $characters more lives lost (per million people)")
+            }
+            Span(attrs = {
+                classes(WtTexts.wtText1)
             }) {
-                val characters = covidDeathsPerMillion.toInt()
-                val emojiString = "\uD83D\uDE35".repeat(characters)
-                H3(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("For comparison, not getting any vaccine ever will result in $characters lives lost per million")
-                }
                 Text(emojiString)
             }
         }
@@ -241,9 +339,13 @@ private fun Results(vaccineBRiskImprovementPerMillion: Risk?, weeksUntilVaccineA
 private fun SexSelection(sex: Sex, sexSelected: (Sex) -> Unit) {
     Label(attrs = {
         classes(WtTexts.wtText1)
+        style {
+            paddingBottom(8.px)
+        }
     }) {
         Text("Sex")
     }
+
     P(attrs = {
         style {
             paddingBottom(16.px)
@@ -262,18 +364,29 @@ private fun RadioButton(label: String, checked: Boolean, groupName: String, onCl
             paddingBottom(8.px)
         }
     }) {
-        RadioInput(checked = checked) {
-            id(label)
-            value(label)
-            name(groupName)
-            onChange { onClick() }
+        Span(attrs = {
+            style {
+                paddingRight(8.px)
+            }
+        }) {
+            RadioInput(checked = checked) {
+                id(label)
+                value(label)
+                name(groupName)
+                onChange { onClick() }
+                style {
+                    paddingRight(8.px)
+                }
+            }
+        }
+        Span {
+            Label(attrs = {
+                forId(label)
+            }) {
+                Text(label)
+            }
         }
 
-        Label(attrs = {
-            forId(label)
-        }) {
-            Text(label)
-        }
     }
 }
 
@@ -291,18 +404,26 @@ fun InputField(label: String, value: String, onChange: (String) -> Unit) {
                 paddingRight(8.px)
             }
         }) {
-            TextInput(
-                value = value,
-                attrs = {
-                    onChange {
-                        onChange(it.value)
-                    }
-                    size(9)
-                    type(InputType.Number)
+            Span(attrs = {
+                style {
+                    paddingRight(8.px)
                 }
-            )
-            Label {
-                Text(label)
+            }) {
+                TextInput(
+                    value = value,
+                    attrs = {
+                        onChange {
+                            onChange(it.value)
+                        }
+                        size(9)
+                        type(InputType.Number)
+                    }
+                )
+            }
+            Span {
+                Label {
+                    Text(label)
+                }
             }
         }
     }
@@ -323,14 +444,26 @@ fun Heading() {
                 )
             }) {
                 P(attrs = {
-                    classes(WtTexts.wtText2)
+                    classes(WtTexts.wtText1)
+                    style {
+                        paddingBottom(8.px)
+                    }
                 }) {
                     Text("Many Australians are wondering...")
                 }
-                H1(attrs = { classes(WtTexts.wtHero) }) {
+                H1(attrs = {
+                    classes(WtTexts.wtHero)
+                    style {
+                        paddingBottom(12.px)
+                    }
+                }) {
                     Text("Should I get AstraZeneca now, or wait for Pfizer?")
                 }
+                P {
+                    LinkToGithub()
+                }
             }
+
         }
     }
 }

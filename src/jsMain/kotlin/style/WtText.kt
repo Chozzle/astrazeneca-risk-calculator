@@ -57,6 +57,7 @@ object WtTexts : StyleSheet(AppStylesheet) {
         letterSpacing("normal")
         fontWeight(400)
         lineHeight(28.px)
+        overflow("hidden")
 
         property(
             "font-family",
@@ -142,7 +143,7 @@ object WtTexts : StyleSheet(AppStylesheet) {
         color(Color("#fff"))
     }
 
-        val wtH3 by style {
+    val wtH3 by style {
         color(Color("#27282c"))
         fontSize(21.px)
         fontSize(AppCSSVariables.wtH3FontSize.value(20.px))
@@ -219,5 +220,21 @@ object WtTexts : StyleSheet(AppStylesheet) {
                 marginLeft(8.px)
             }
         }
+    }
+
+    val partialHiddenCharacter by style {
+        color(rgba(39, 40, 44, .7))
+        fontSize(18.px)
+        letterSpacing("normal")
+        fontWeight(400)
+        lineHeight(28.px)
+
+        property(
+            "font-family",
+            "system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Droid Sans,Helvetica Neue,Arial,sans-serif"
+        )
+
+        display(DisplayStyle.InlineBlock)
+        overflow("hidden")
     }
 }

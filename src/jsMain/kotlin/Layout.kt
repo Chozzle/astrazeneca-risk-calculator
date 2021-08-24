@@ -45,7 +45,7 @@ fun ContainerInSection(sectionThemeStyleClass: String? = null, content: @Composa
         }
     }) {
         Div({
-            classes(WtContainer.wtContainer, WtOffsets.wtTopOffset96)
+            classes(WtContainer.wtContainer, WtOffsets.wtTopOffset48)
         }) {
             content()
         }

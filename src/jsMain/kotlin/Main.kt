@@ -202,19 +202,15 @@ private fun Results(
         if (vaccineBRiskImprovementPerMillion == null) return@ContainerInSection
         val bestVaccine: Vaccine
         val otherVaccine: Vaccine
-        val weeksBestVaccineString: String
         val weeksOtherVaccineString: String
 
         if (vaccineBRiskImprovementPerMillion.mortality > 0) {
             bestVaccine = Pfizer
-            weeksBestVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
             otherVaccine = AstraZeneca
             weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
 
         } else {
             bestVaccine = AstraZeneca
-            weeksBestVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
-
             otherVaccine = Pfizer
             weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
         }
@@ -222,8 +218,6 @@ private fun Results(
         P(attrs = {
         }) {
             H3(attrs = { classes(WtTexts.wtH3) }) {
-                val weeksUntilVaccineBString =
-                    if (weeksUntilVaccineA == 0) "now" else "$weeksUntilVaccineA weeks"
                 Text("This risk calculation suggests ${if (bestVaccine == Pfizer) "waiting for" else "getting"} ${bestVaccine.name}")
             }
         }

@@ -8,9 +8,11 @@ import com.ionspin.kotlin.bignum.decimal.DecimalMode
 import com.ionspin.kotlin.bignum.decimal.RoundingMode
 import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlinext.js.asJsObject
+import org.jetbrains.compose.web.attributes.InputType
 import org.jetbrains.compose.web.attributes.forId
 import org.jetbrains.compose.web.attributes.name
 import org.jetbrains.compose.web.attributes.size
+import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.attributes.value
 import org.jetbrains.compose.web.css.Style
 import org.jetbrains.compose.web.css.paddingBottom
@@ -57,6 +59,11 @@ fun main() {
         )
         val vaccineBRiskImprovementPerMillion =
             currentOutcome?.let { calculateVaccineBRiskImprovementPerMillion(scenarioOutcome = it.scenarioOutcome) }
+        val noVaccineLifetimeRisk = calculateNoVaccineRiskAfterInfection(
+            age,
+            sex,
+            CovidDelta
+        )
 
         Style(AppStylesheet)
 
@@ -133,35 +140,55 @@ fun main() {
                     }
                 }
             }
-            Results(vaccineBRiskImprovementPerMillion)
+            Results(vaccineBRiskImprovementPerMillion, weeksUntilVaccinationA, weeksUntilVaccinationB, noVaccineLifetimeRisk.mortality * 1_000_000)
         }
     }
 }
 
 @Composable
-private fun Results(vaccineBRiskImprovementPerMillion: Risk?) {
+private fun Results(vaccineBRiskImprovementPerMillion: Risk?, weeksUntilVaccineA: Int, weeksUntilVaccineB: Int, covidDeathsPerMillion: Double) {
     ContainerInSection(WtSections.wtSection) {
         if (vaccineBRiskImprovementPerMillion != null) {
-            P {
+            P(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
                 val bestVaccine: Vaccine
                 val otherVaccine: Vaccine
+                val weeksBestVaccineString: String
+                val weeksOtherVaccineString: String
+
                 if (vaccineBRiskImprovementPerMillion.mortality > 0) {
                     bestVaccine = Pfizer
+                    weeksBestVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
                     otherVaccine = AstraZeneca
+                    weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+
                 } else {
                     bestVaccine = AstraZeneca
+                    weeksBestVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+
                     otherVaccine = Pfizer
+                    weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+
                 }
                 H3(attrs = { classes(WtTexts.wtH3) }) {
-                    Text("Choosing ${bestVaccine.name} should have these benefits compared to the other scenario (per one million people)")
+                    val weeksUntilVaccineBString = if (weeksUntilVaccineA == 0) "now" else "$weeksUntilVaccineA weeks"
+                    Text("Getting ${bestVaccine.name} $weeksBestVaccineString should have these benefits compared to getting ${otherVaccine.name} $weeksOtherVaccineString (per one million people)")
                 }
             }
 
-            Div {
+            P(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
                 val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
                     decimalMode = DecimalMode(
-                        2,
-                        RoundingMode.TOWARDS_ZERO
+                        3,
+                        RoundingMode.TOWARDS_ZERO,
+                        scale = 2
                     )
                 )
                 val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
@@ -176,18 +203,36 @@ private fun Results(vaccineBRiskImprovementPerMillion: Risk?) {
                 Text(emojiString)
             }
 
-            Div {
+            P(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
                 val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
                     decimalMode = DecimalMode(
-                        2,
-                        RoundingMode.TOWARDS_ZERO
+                        3,
+                        RoundingMode.TOWARDS_ZERO,
+                        scale = 2
                     )
                 )
                 val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
                 val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
                 val emojiString = "🏥".repeat(characters)
+                Div(attrs = { classes(WtTexts.wtText1) }) {
+                    Text("${roundedTo2Decimals.toPlainString()} fewer hospitalisations")
+                }
+                Text(emojiString)
+            }
+
+            P(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
+                val characters = covidDeathsPerMillion.toInt()
+                val emojiString = "\uD83D\uDE35".repeat(characters)
                 H3(attrs = { classes(WtTexts.wtText1) }) {
-                    Text("${roundedTo2Decimals.toPlainString()} fewer hospitalizations")
+                    Text("For comparison, not getting any vaccine ever will result in $characters lives lost per million")
                 }
                 Text(emojiString)
             }
@@ -256,6 +301,7 @@ fun InputField(label: String, value: String, onChange: (String) -> Unit) {
                         onChange(it.value)
                     }
                     size(9)
+                    type(InputType.Number)
                 }
             )
             Label {

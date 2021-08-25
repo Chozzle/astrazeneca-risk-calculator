@@ -41,6 +41,9 @@ import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.TextInput
 import org.jetbrains.compose.web.renderComposable
+import org.w3c.dom.SMOOTH
+import org.w3c.dom.ScrollBehavior
+import org.w3c.dom.ScrollToOptions
 import style.AppStylesheet
 import style.WtCols
 import style.WtOffsets
@@ -108,33 +111,30 @@ fun main() {
                         paddingTop(16.px)
                     }
                 }) {
+
                     Button(attrs = {
                         style {
                             minWidth(120.px)
                             minHeight(40.px)
                         }
-                        onClick {
-                            println("A")
+
+                        addEventListener("click") {
                             val vaccineScheduleA =
                                 VaccinationSchedule(AstraZeneca, Duration.days(weeksUntilVaccinationA * 7))
-                            println("B")
                             val vaccineScheduleB =
                                 VaccinationSchedule(Pfizer, Duration.days(weeksUntilVaccinationB * 7))
-                            println("C")
                             val citizenContext = CitizenContext(
                                 age,
                                 sex,
                                 vaccineScheduleA,
                                 vaccineScheduleB
                             )
-                            println("D")
                             val virusEnvironment = VirusEnvironment(
                                 dailyCases,
                                 dailyCasesScenarioEnd,
                                 population = population,
                                 CovidDelta
                             )
-                            println("E")
                             currentOutcome = accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironment)
                             println(currentOutcome?.asJsObject())
                             vaccineBRiskImprovementPerMillion =
@@ -199,150 +199,177 @@ private fun Results(
     amountMoreDeathsIfVaccineNotTakenPerMillion: Double
 ) {
     ContainerInSection(WtSections.wtSection) {
-        if (vaccineBRiskImprovementPerMillion == null) return@ContainerInSection
-        val bestVaccine: Vaccine
-        val otherVaccine: Vaccine
-        val weeksOtherVaccineString: String
-
-        if (vaccineBRiskImprovementPerMillion.mortality > 0) {
-            bestVaccine = Pfizer
-            otherVaccine = AstraZeneca
-            weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
-
-        } else {
-            bestVaccine = AstraZeneca
-            otherVaccine = Pfizer
-            weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
-        }
-
-        P(attrs = {
-        }) {
-            H3(attrs = { classes(WtTexts.wtH3) }) {
-                Text("This risk calculation suggests ${if (bestVaccine == Pfizer) "waiting for" else "getting"} ${bestVaccine.name}")
-            }
-        }
-        P(attrs = {
-            classes(WtTexts.wtText2)
-            style {
-                paddingBottom(16.px)
-            }
-        }) {
-            Text("The calculation is based on outcomes for people with average health. Use this for information purposes only. See your GP to discuss your unique circumstances.")
-        }
-
         Div(attrs = {
-            style {
-                paddingBottom(16.px)
-            }
+            id("results")
         }) {
-            val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
-                decimalMode = DecimalMode(
-                    3,
-                    RoundingMode.TOWARDS_ZERO,
-                    scale = 2
-                )
-            )
-            val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
-            val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
-            val emojiString = "\uD83D\uDE05".repeat(characters)
 
-            H3(attrs = {
-                classes(WtTexts.wtText1)
+            if (vaccineBRiskImprovementPerMillion == null) return@Div
+
+            // Scroll if results change
+            var currentRisk: Risk? by remember { mutableStateOf(null) }
+            if (currentRisk == null || currentRisk != vaccineBRiskImprovementPerMillion){
+                DomSideEffect {
+                    it.scrollIntoView(ScrollToOptions(behavior = ScrollBehavior.SMOOTH))
+                }
+                currentRisk = vaccineBRiskImprovementPerMillion
+            }
+            val bestVaccine: Vaccine
+            val otherVaccine: Vaccine
+            val weeksOtherVaccineString: String
+
+            if (vaccineBRiskImprovementPerMillion.mortality > 0) {
+                bestVaccine = Pfizer
+                otherVaccine = AstraZeneca
+                weeksOtherVaccineString = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+
+            } else {
+                bestVaccine = AstraZeneca
+                otherVaccine = Pfizer
+                weeksOtherVaccineString = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+            }
+
+            P(attrs = {
+            }) {
+                H3(attrs = { classes(WtTexts.wtH3) }) {
+                    Text("This risk calculation suggests ${if (bestVaccine == Pfizer) "waiting for" else "getting"} ${bestVaccine.name}")
+                }
+            }
+            P(attrs = {
+                classes(WtTexts.wtText2)
                 style {
-                    color(rgba(0, 0, 0, 1))
+                    paddingBottom(16.px)
                 }
             }) {
-                Text("Getting ${bestVaccine.name} should mean ${roundedTo2Decimals.toPlainString()} fewer lives lost than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people like you)")
+                Text("The calculation is based on outcomes for people with average health. Use this for information purposes only. See your GP to discuss your unique circumstances.")
             }
-            P {
-                Span(attrs = {
+
+            Div(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
+                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.mortality.absoluteValue.toBigDecimal(
+                    decimalMode = DecimalMode(
+                        3,
+                        RoundingMode.TOWARDS_ZERO,
+                        scale = 2
+                    )
+                )
+                val remainder = (vaccineBRiskImprovementPerMillion.mortality % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPerMillion.mortality.toInt().absoluteValue
+                val emojiString = "\uD83D\uDE05".repeat(characters)
+
+                H3(attrs = {
                     classes(WtTexts.wtText1)
                     style {
-                        overflow("hidden") // Fix line height mismatch
-                        display(DisplayStyle.InlineBlock)
+                        color(rgba(0, 0, 0, 1))
                     }
+                }) {
+                    Text("Getting ${bestVaccine.name} should mean ${roundedTo2Decimals.toPlainString()} fewer lives lost than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people like you)")
+                }
+                P {
+                    Span(attrs = {
+                        classes(WtTexts.wtText1)
+                        style {
+                            overflow("hidden") // Fix line height mismatch
+                            display(DisplayStyle.InlineBlock)
+                        }
+                    }) {
+                        Text(emojiString)
+                    }
+
+                    val emojiWidthPx = 20
+                    Span(attrs = {
+                        classes(WtTexts.partialHiddenCharacter)
+                        style {
+                            maxWidth((remainder * emojiWidthPx).px)
+                        }
+                    }) {
+                        Text("\uD83D\uDE05")
+                    }
+                }
+            }
+
+            val bestVaccineHospitalizations: Vaccine
+            val otherVaccineHospitalizations: Vaccine
+            val weeksOtherVaccineStringHospitalizations: String
+            if (vaccineBRiskImprovementPerMillion.hospitalization > 0) {
+                bestVaccineHospitalizations = Pfizer
+                otherVaccineHospitalizations = AstraZeneca
+                weeksOtherVaccineStringHospitalizations = if (weeksUntilVaccineA == 0) "now" else "in $weeksUntilVaccineA weeks"
+
+            } else {
+                bestVaccineHospitalizations = AstraZeneca
+                otherVaccineHospitalizations = Pfizer
+                weeksOtherVaccineStringHospitalizations = if (weeksUntilVaccineB == 0) "now" else "in $weeksUntilVaccineB weeks"
+            }
+            Div(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
+                val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
+                    decimalMode = DecimalMode(
+                        3,
+                        RoundingMode.TOWARDS_ZERO,
+                        scale = 2
+                    )
+                )
+                val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
+                val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
+                val emojiString = "🏥".repeat(characters)
+
+                H3(attrs = {
+                    classes(WtTexts.wtText1)
+                    style {
+                        color(rgba(0, 0, 0, 1))
+                    }
+                }) {
+                    Text("Getting ${bestVaccineHospitalizations.name} should mean ${roundedTo2Decimals.toPlainString()} fewer hospitalisations than getting ${otherVaccineHospitalizations.name} $weeksOtherVaccineStringHospitalizations (per million people like you)")
+                }
+                P {
+                    Span(attrs = {
+                        classes(WtTexts.wtText1)
+                        style {
+                            overflow("hidden") // Fix line height mismatch
+                            display(DisplayStyle.InlineBlock)
+                        }
+                    }) {
+                        Text(emojiString)
+                    }
+
+                    val emojiWidthPx = 20
+                    Span(attrs = {
+                        classes(WtTexts.partialHiddenCharacter)
+                        style {
+                            maxWidth((remainder * emojiWidthPx).px)
+                        }
+                    }) {
+                        Text("🏥")
+                    }
+                }
+            }
+
+            Div(attrs = {
+                style {
+                    paddingBottom(16.px)
+                }
+            }) {
+                val characters = amountMoreDeathsIfVaccineNotTakenPerMillion.toInt()
+                val emojiString = "\uD83D\uDE05".repeat(characters)
+                H3(attrs = {
+                    classes(WtTexts.wtText1)
+                    style {
+                        color(rgba(0, 0, 0, 1))
+                    }
+                }) {
+                    Text("Getting ${bestVaccine.name} should mean $characters fewer lives lost compared to not getting a vaccine (per million people like you)")
+                }
+                Span(attrs = {
+                    classes(WtTexts.wtText1)
                 }) {
                     Text(emojiString)
                 }
-
-                val emojiWidthPx = 20
-                Span(attrs = {
-                    classes(WtTexts.partialHiddenCharacter)
-                    style {
-                        maxWidth((remainder * emojiWidthPx).px)
-                    }
-                }) {
-                    Text("\uD83D\uDE05")
-                }
-            }
-        }
-
-        Div(attrs = {
-            style {
-                paddingBottom(16.px)
-            }
-        }) {
-            val roundedTo2Decimals = vaccineBRiskImprovementPerMillion.hospitalization.absoluteValue.toBigDecimal(
-                decimalMode = DecimalMode(
-                    3,
-                    RoundingMode.TOWARDS_ZERO,
-                    scale = 2
-                )
-            )
-            val remainder = (vaccineBRiskImprovementPerMillion.hospitalization % 1).absoluteValue
-            val characters = vaccineBRiskImprovementPerMillion.hospitalization.toInt().absoluteValue
-            val emojiString = "🏥".repeat(characters)
-
-            H3(attrs = {
-                classes(WtTexts.wtText1)
-                style {
-                    color(rgba(0, 0, 0, 1))
-                }
-            }) {
-                Text("Getting ${bestVaccine.name} should mean ${roundedTo2Decimals.toPlainString()} fewer hospitalisations than getting ${otherVaccine.name} $weeksOtherVaccineString (per million people like you)")
-            }
-            P {
-                Span(attrs = {
-                    classes(WtTexts.wtText1)
-                    style {
-                        overflow("hidden") // Fix line height mismatch
-                        display(DisplayStyle.InlineBlock)
-                    }
-                }) {
-                    Text(emojiString)
-                }
-
-                val emojiWidthPx = 20
-                Span(attrs = {
-                    classes(WtTexts.partialHiddenCharacter)
-                    style {
-                        maxWidth((remainder * emojiWidthPx).px)
-                    }
-                }) {
-                    Text("🏥")
-                }
-            }
-        }
-
-        Div(attrs = {
-            style {
-                paddingBottom(16.px)
-            }
-        }) {
-            val characters = amountMoreDeathsIfVaccineNotTakenPerMillion.toInt()
-            val emojiString = "\uD83D\uDE05".repeat(characters)
-            H3(attrs = {
-                classes(WtTexts.wtText1)
-                style {
-                    color(rgba(0, 0, 0, 1))
-                }
-            }) {
-                Text("Getting ${bestVaccine.name} should mean $characters fewer lives lost compared to not getting a vaccine (per million people like you)")
-            }
-            Span(attrs = {
-                classes(WtTexts.wtText1)
-            }) {
-                Text(emojiString)
             }
         }
     }

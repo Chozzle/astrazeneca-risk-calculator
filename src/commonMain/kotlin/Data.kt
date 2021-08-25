@@ -117,11 +117,14 @@ object CovidDelta : Virus {
         // I think this is most accurate source based on CFR in Australian. We are basing the chance of infection on
         // number of cases so CFR will correlate better.
 
-        return caseFatalityRateAustralia(age, sex)
-//        return infectionFatalityRateWorld(age, gender)
-//        return ageToMortalityTableCDC.entries.find { (ageRange, _) ->
-//            age in ageRange
-//        }!!.value
+        val caseFatalityRateAustralia = caseFatalityRateAustralia(age, sex)
+        if (caseFatalityRateAustralia == 0.0) {
+
+            // Fall back to world IFR rate if no deaths in Australia for the age/sex group due to small sample
+            return infectionFatalityRateWorld(age, sex)
+        } else {
+            return caseFatalityRateAustralia
+        }
     }
 
     // Based on https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/burden.html
@@ -236,9 +239,15 @@ object CovidDelta : Virus {
         }!!.value
 
         return when (sex) {
-            Sex.MALE -> totalDeathsMale.toDouble() / totalCasesMale
-            Sex.FEMALE -> totalDeathsFemale.toDouble() / totalCasesFemale
-            Sex.UNSPECIFIED -> (totalDeathsMale.toDouble() + totalDeathsFemale.toDouble()) / (totalCasesMale + totalCasesFemale)
+            Sex.MALE -> {
+                totalDeathsMale.toDouble() / totalCasesMale
+            }
+            Sex.FEMALE -> {
+                totalDeathsFemale.toDouble() / totalCasesFemale
+            }
+            Sex.UNSPECIFIED -> {
+                (totalDeathsMale.toDouble() + totalDeathsFemale.toDouble()) / (totalCasesMale + totalCasesFemale)
+            }
         }
     }
 

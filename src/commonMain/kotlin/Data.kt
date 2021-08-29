@@ -252,62 +252,62 @@ object CovidDelta : Virus {
     }
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
-    // Updated 20/8/2021
+    // Updated 29/8/2021
     private val totalCasesAustraliaMale = mapOf<IntRange, Int>(
-        0..9 to 1571,
-        10..19 to 2260,
-        20..29 to 4504,
-        30..39 to 3767,
-        40..49 to 2687,
-        50..59 to 2365,
-        60..69 to 1574,
-        70..79 to 1024,
-        80..89 to 575,
-        90..Int.MAX_VALUE to 260,
+        0..9 to 2102,
+        10..19 to 2888,
+        20..29 to 5527,
+        30..39 to 4495,
+        40..49 to 3137,
+        50..59 to 2702,
+        60..69 to 1736,
+        70..79 to 1105,
+        80..89 to 592,
+        90..Int.MAX_VALUE to 257,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
-    // Updated 20/8/2021
+    // Updated 29/8/2021
     private val totalCasesAustraliaFemale = mapOf<IntRange, Int>(
-        0..9 to 1462,
-        10..19 to 2193,
-        20..29 to 4564,
-        30..39 to 3526,
-        40..49 to 2508,
-        50..59 to 2293,
-        60..69 to 1489,
-        70..79 to 893,
-        80..89 to 867,
-        90..Int.MAX_VALUE to 594,
+        0..9 to 1945,
+        10..19 to 2819,
+        20..29 to 5331,
+        30..39 to 4125,
+        40..49 to 2924,
+        50..59 to 2581,
+        60..69 to 1644,
+        70..79 to 934,
+        80..89 to 899,
+        90..Int.MAX_VALUE to 599,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
-    // Updated 20/8/2021
+    // Updated 29/8/2021
     private val totalDeathsAustraliaByAgeMale = mapOf<IntRange, Int>(
         0..9 to 0,
         10..19 to 1,
         20..29 to 2,
-        30..39 to 3,
+        30..39 to 4,
         40..49 to 3,
         50..59 to 10,
-        60..69 to 32,
-        70..79 to 108,
-        80..89 to 196,
-        90..Int.MAX_VALUE to 121,
+        60..69 to 35,
+        70..79 to 110,
+        80..89 to 202,
+        90..Int.MAX_VALUE to 123,
     )
 
     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
-    // Updated 20/8/2021
+    // Updated 29/8/2021
     private val totalDeathsAustraliaByAgeFemale = mapOf<IntRange, Int>(
         0..9 to 0,
         10..19 to 0,
         20..29 to 0,
-        30..39 to 1,
+        30..39 to 2,
         40..49 to 2,
         50..59 to 7,
         60..69 to 13,
-        70..79 to 61,
-        80..89 to 205,
-        90..Int.MAX_VALUE to 207,
+        70..79 to 62,
+        80..89 to 208,
+        90..Int.MAX_VALUE to 208,
     )
 }

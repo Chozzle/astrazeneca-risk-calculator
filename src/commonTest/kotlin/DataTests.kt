@@ -74,17 +74,19 @@ class DataTests {
 
     @Test
     fun ausCfrSimilarToWorldIfr() {
-        val withinRangeFactor = 7 // Smallest current error
+        val upperRangeFactor = 7 // Smallest current difference (females 70yo)
+        val lowerRangeFactor = 1.8 // Smallest current difference (males 45-49)
         (20..100 step 5).forEach { age ->
             val cfrMale = CovidDelta.ageToMortality(age, Sex.MALE) // Includes switch to ifr if current cfr is 0
             val cfrFemale = CovidDelta.ageToMortality(age, Sex.FEMALE) // Includes switch to ifr if current cfr is 0
             val ifrMale = CovidDelta.infectionFatalityRateWorld(age, Sex.MALE)
             val ifrFemale = CovidDelta.infectionFatalityRateWorld(age, Sex.FEMALE)
 
-            val ifrMaleRange = (ifrMale * (1.0 / withinRangeFactor))..(ifrMale * withinRangeFactor)
-            val ifrFemaleRange = (ifrFemale * (1.0 / withinRangeFactor))..(ifrFemale * withinRangeFactor)
+            val ifrMaleRange = (ifrMale * (1.0 / lowerRangeFactor))..(ifrMale * upperRangeFactor)
+            val ifrFemaleRange = (ifrFemale * (1.0 / lowerRangeFactor))..(ifrFemale * upperRangeFactor)
             assertTrue(cfrMale in ifrMaleRange, "Australian Male CFR: $cfrMale for age: $age not within range of world IFR: $ifrMale")
             assertTrue(cfrFemale in ifrFemaleRange, "Australian Female CFR: $cfrFemale for age: $age not within range of world IFR: $ifrFemale")
+            println()
         }
     }
 }

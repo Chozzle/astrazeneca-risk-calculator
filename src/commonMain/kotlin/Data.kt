@@ -14,13 +14,18 @@ object AstraZeneca : Vaccine {
         }!!.value
     }
 
-    // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
+    // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
     override fun ageToSideEffectMortality(age: Int): Double {
         // Ignoring age for now
-        return totalDeaths / totalAZVaccinesAustralia.toDouble()
+        return totalDeaths / totalAZFirstDosesAustralia.toDouble()
     }
 
-    private const val totalAZVaccinesAustralia = 7_400_000
+    // The comparison we want is to a full vaccination schedule (2 doses)
+    // Dividing by first dose only gives us that comparison.
+    // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
+    private const val totalAZFirstDosesAustralia = 5_400_000
+
+    // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
     private const val totalDeaths = 7 // Includes 1 case of ITP.
 
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
@@ -48,11 +53,11 @@ object AstraZeneca : Vaccine {
 
     override val timeBetweenDoses: Duration = Duration.days(12 * 7)
 
-    // https://www.health.gov.au/news/australian-technical-advisory-group-on-immunisation-atagi-weekly-covid-19-meeting-on-11-august-2021-update
+    // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
     private val ageToHospitalizationTable = mapOf<IntRange, Double>(
-        0..49 to 3.4 / 100_000,
-        50..59 to 2.5 / 100_000,
-        60..69 to 1.5 / 100_000,
+        0..49 to 2.5 / 100_000,
+        50..59 to 2.7 / 100_000,
+        60..69 to 1.6 / 100_000,
         70..79 to 2.1 / 100_000,
         80..Int.MAX_VALUE to 1.6 / 100_000,
     )

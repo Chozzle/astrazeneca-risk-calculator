@@ -1,40 +1,41 @@
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.time.Duration
 
 
 class ScenarioTest {
-    val citizenContext = CitizenContext(
-        age = 25,
-        sex = Sex.FEMALE,
-        vaccinationScheduleA = VaccinationSchedule(
-            vaccine = AstraZeneca,
-            timeUntilFirstDose = Duration.days(3)
-        ),
-        vaccinationScheduleB = VaccinationSchedule(
-            vaccine = Pfizer,
 
-            // https://www.smh.com.au/national/what-do-the-vaccine-reopening-targets-mean-and-when-is-all-the-pfizer-arriving-20210802-p58f1h.html
-            timeUntilFirstDose = Duration.days(2 * 30) // Set for months * ~days in a month
-        )
-    )
-
-    val virusEnvironmentQLD = VirusEnvironment(
-        dailyCaseCountNow = 5,
-        dailyCaseCountAtScenarioEnd = 200,
-        population = 2_700_000, // Brisbane and GC
-        virus = CovidDelta
-    )
-
-    val virusEnvironmentNSW = VirusEnvironment(
-        dailyCaseCountNow = 700,
-        dailyCaseCountAtScenarioEnd = 3000,
-        population = 5_000_000, // Sydney
-        virus = CovidDelta
-    )
 
     @Test
     fun test() {
+        val citizenContext = CitizenContext(
+            age = 25,
+            sex = Sex.FEMALE,
+            vaccinationScheduleA = VaccinationSchedule(
+                vaccine = AstraZeneca,
+                timeUntilFirstDose = Duration.days(3)
+            ),
+            vaccinationScheduleB = VaccinationSchedule(
+                vaccine = Pfizer,
 
+                // https://www.smh.com.au/national/what-do-the-vaccine-reopening-targets-mean-and-when-is-all-the-pfizer-arriving-20210802-p58f1h.html
+                timeUntilFirstDose = Duration.days(2 * 30) // Set for months * ~days in a month
+            )
+        )
+
+        val virusEnvironmentQLD = VirusEnvironment(
+            dailyCaseCountNow = 5,
+            dailyCaseCountAtScenarioEnd = 200,
+            population = 2_700_000, // Brisbane and GC
+            virus = CovidDelta
+        )
+
+        val virusEnvironmentNSW = VirusEnvironment(
+            dailyCaseCountNow = 700,
+            dailyCaseCountAtScenarioEnd = 3000,
+            population = 5_000_000, // Sydney
+            virus = CovidDelta
+        )
         val noVaccineLifetimeRisk = calculateNoVaccineRiskAfterInfection(
             citizenContext.age,
             citizenContext.sex,
@@ -82,6 +83,40 @@ class ScenarioTest {
 
             println()
         }
+    }
+
+    @Test
+    fun calculatorRecommendsAZOver60Male() {
+        val citizenContext = CitizenContext(
+            age = 60,
+            sex = Sex.MALE,
+            vaccinationScheduleA = VaccinationSchedule(
+                vaccine = AstraZeneca,
+                timeUntilFirstDose = Duration.days(0)
+            ),
+            vaccinationScheduleB = VaccinationSchedule(
+                vaccine = Pfizer,
+                timeUntilFirstDose = Duration.days(6 * 7) // Only recommends if Pfizer 6 weeks away
+            )
+        )
+
+        val virusEnvironmentQLDAugust = VirusEnvironment(
+            dailyCaseCountNow = 10,
+            dailyCaseCountAtScenarioEnd = 100,
+            population = 2_700_000, // Brisbane and GC
+            virus = CovidDelta
+        )
+
+        val accumulatedOutcomeForScenarioPeriodQld =
+            accumulatedOutcomeForScenarioPeriod(citizenContext, virusEnvironmentQLDAugust)
+
+        val pfizerRiseImprovement =
+            calculateVaccineBRiskImprovementPerMillion(accumulatedOutcomeForScenarioPeriodQld.scenarioOutcome)
+
+        assertTrue(
+            pfizerRiseImprovement.mortality < 0.0,
+            "Pfizer risk improvement: ${pfizerRiseImprovement.mortality}"
+        ) // less than zero means AZ better
     }
 
 }

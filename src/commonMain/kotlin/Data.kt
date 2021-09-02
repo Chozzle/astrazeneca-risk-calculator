@@ -2,10 +2,21 @@ import kotlin.time.Duration
 
 // https://www.healthline.com/health-news/heres-how-well-covid-19-vaccines-work-against-the-delta-variant#Key-takeaways
 
-object AstraZeneca : Vaccine {
+data class AstraZeneca(
+    override val timeBetweenDoses: Duration = maximumTimeBetweenDoses
+) : Vaccine {
+    companion object {
+        val minimumTimeBetweenDoses = Duration.days(4 * 7)
+        val maximumTimeBetweenDoses = Duration.days(12 * 7)
+    }
+
+    init {
+        if (timeBetweenDoses !in minimumTimeBetweenDoses..maximumTimeBetweenDoses) {
+            error("Time between doses $timeBetweenDoses is invalid")
+        }
+    }
 
     // All research referring to Delta strain
-
     override val name: String = "AstraZeneca"
 
     override fun ageToSideEffectHospitalizationChance(age: Int): Double {
@@ -23,10 +34,10 @@ object AstraZeneca : Vaccine {
     // The comparison we want is to a full vaccination schedule (2 doses)
     // Dividing by first dose only gives us that comparison.
     // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
-    private const val totalAZFirstDosesAustralia = 5_400_000
+    private val totalAZFirstDosesAustralia = 5_400_000
 
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
-    private const val totalDeaths = 7 // Includes 1 case of ITP.
+    private val totalDeaths = 7 // Includes 1 case of ITP.
 
     // https://www.tga.gov.au/periodic/covid-19-vaccine-weekly-safety-report-12-08-2021
     override val medianTimeToSideEffectOnset = Duration.days(12)
@@ -40,18 +51,34 @@ object AstraZeneca : Vaccine {
         hospitalizationEffectiveness = 0.71,
     )
 
-    override fun secondDoseEffectiveness() = Effectiveness(
+    override fun secondDoseEffectiveness(): Effectiveness {
+        val timeBetweenDosesRange = maximumTimeBetweenDoses - minimumTimeBetweenDoses
+        val timeIntoRange = timeBetweenDoses - minimumTimeBetweenDoses
+        val amount = timeIntoRange / timeBetweenDosesRange
+        val coercedAmount = amount.coerceIn(0.0, 1.0)
+        val effectiveness = linearInterpolation(
+            start = secondDoseEffectiveness4WeeksAfterFirst,
+            end = secondDoseEffectiveness12WeeksAfterFirst,
+            amount = coercedAmount
+        )
 
-        // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
-        effectiveness = 0.67,
+        val effectivenessReductionFactorFrom12Weeks = effectiveness / secondDoseEffectiveness12WeeksAfterFirst
+        return Effectiveness(
+            effectiveness = effectiveness,
+            hospitalizationEffectiveness = hospitalizationEffectiveness * effectivenessReductionFactorFrom12Weeks
+        )
+    }
 
-        // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
-        // This is higher than the 80% used here in the most recent AZ cost/benefit recommendation from the Australian Government Department of Health
-        // https://www.health.gov.au/sites/default/files/documents/2021/06/covid-19-vaccination-weighing-up-the-potential-benefits-against-risk-of-harm-from-covid-19-vaccine-astrazeneca_1.pdf
-        hospitalizationEffectiveness = 0.92,
-    )
+    // https://www.nejm.org/doi/full/10.1056/NEJMoa2108891
+    private val secondDoseEffectiveness12WeeksAfterFirst = 0.67
+    // https://www.health.gov.au/news/atagi-statement-on-use-of-covid-19-vaccines-in-an-outbreak-setting
+    // With factor of reduced effectiveness against Delta added
+    private val secondDoseEffectiveness4WeeksAfterFirst = 0.55 * (0.67 / 0.88)
 
-    override val timeBetweenDoses: Duration = Duration.days(12 * 7)
+    // https://khub.net/web/phe-national/public-library/-/document_library/v2WsRK3ZlEig/view/479607266
+    // This is higher than the 80% used here in the most recent AZ cost/benefit recommendation from the Australian Government Department of Health
+    // https://www.health.gov.au/sites/default/files/documents/2021/06/covid-19-vaccination-weighing-up-the-potential-benefits-against-risk-of-harm-from-covid-19-vaccine-astrazeneca_1.pdf
+    private val hospitalizationEffectiveness = 0.92
 
     // https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
     private val ageToHospitalizationTable = mapOf<IntRange, Double>(
@@ -100,7 +127,7 @@ object Pfizer : Vaccine {
         )
     }
 
-    override val timeBetweenDoses = Duration.days(6 * 7)
+    override val timeBetweenDoses = Duration.days(3 * 7) // Shorter, for comparison
 }
 
 object CovidDelta : Virus {
@@ -134,7 +161,6 @@ object CovidDelta : Virus {
 
     // Based on https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/burden.html
     // TODO This does seem low. Is this counting cases where patients are already vaccinated?
-    // Should probably switch to using Australian data
     private val ageToMortalityTableCDC = mapOf<IntRange, Double>(
         0..17 to 0.5 / 100_000,
         18..49 to 25.0 / 100_000,
@@ -145,18 +171,6 @@ object CovidDelta : Virus {
     fun ageToMortalityAfterHospitalization(age: Int, sex: Sex): Double {
         return ageToHospitalizationChance(age)
     }
-
-    /* // At 15 Aug 2021
-     // https://www.health.gov.au/news/health-alerts/novel-coronavirus-2019-ncov-health-alert/coronavirus-covid-19-case-numbers-and-statistics
-     // Not used yet. Using CDC data because it's already statistically analysed, so I don't have to
-     private val activeCases = 6577
-     private val activeCasesInICU = 68
-     private val activeCasesNotInICU = 359
-     private val totalActiveHospitalized = activeCasesInICU + activeCasesNotInICU
-
-     // This is generously low to Covid. The real chance could be higher because this includes cases detected that have not yet
-     // been hospitalized.
-     val hospitalizationChance = totalActiveHospitalized / activeCases*/
 
     fun infectionFatalityRateWorld(age: Int, sex: Sex): Double {
         return when (sex) {
@@ -180,10 +194,9 @@ object CovidDelta : Virus {
                 arrayOf(men, women).average()
             }
         }
-
     }
 
-    // This data is not based on Delta variant as the study is from earlier. However this mean it is unaffected by
+    // This data is not based on Delta variant as the study is from earlier. However, this mean it is unaffected by
     // vaccinations
     // https://www.nature.com/articles/s41586-020-2918-0/figures/2
     private val infectionFatalityRatePercentWorldMen = mapOf<IntRange, Double>(

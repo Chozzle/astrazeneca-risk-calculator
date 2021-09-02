@@ -43,7 +43,8 @@ fun calculateScenarioOutcome(
             )
         }
 
-        // Assume all risk occurs on the day of vaccination. I can spread it over multiple days later if needing to graph more realistically.
+        // Assume all risk occurs on the day of vaccination. I can spread it over multiple days (around average time to onset)
+        // later if needing to graph more realistically.
         // Result for cumulative risk won't be affected by this assumption
         val vaccinationASideEffectRiskForDay =
             vaccineRiskOnDay(dayAsDuration, citizen.vaccinationScheduleA, citizen.age)
@@ -133,11 +134,15 @@ private fun calculateEffectivenessInPeriod(
     val periodDuration = period.endInclusive - period.start
     val dayIntoEffectivenessIncreasePeriod = onDay - period.start
 
+    val amount = dayIntoEffectivenessIncreasePeriod / periodDuration
+    if (amount !in 0.0..1.0) println("Amount out of range: $amount")
+    val coercedAmount = amount.coerceIn(0.0, 1.0)
+
     // Assume linear increase of effectiveness from first dose up to day of studied effectiveness. Not great, but better than step change
     return linearInterpolation(
         start = startEffectiveness,
         end = endEffectiveness,
-        amount = dayIntoEffectivenessIncreasePeriod / periodDuration
+        amount = coercedAmount
     )
 }
 

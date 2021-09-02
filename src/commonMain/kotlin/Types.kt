@@ -106,9 +106,9 @@ data class CitizenContext(
     val vaccinationScheduleB: VaccinationSchedule,
 ) {
     init {
-        if (vaccinationScheduleB.timeUntilFirstDose < vaccinationScheduleA.timeUntilFirstDose) {
-            error("Calculation not valid for Vaccine B earlier than Vaccine A")
-        }
+//        if (vaccinationScheduleB.timeUntilFirstDose < vaccinationScheduleA.timeUntilFirstDose) {
+//            error("Calculation not valid for Vaccine B earlier than Vaccine A")
+//        }
     }
 }
 

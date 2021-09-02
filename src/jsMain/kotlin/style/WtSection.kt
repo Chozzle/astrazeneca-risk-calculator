@@ -9,6 +9,8 @@ object WtSections : StyleSheet(AppStylesheet) {
     val wtSection by style {
         boxSizing("border-box")
         paddingBottom(40.px)
+        paddingLeft(16.px)
+        paddingRight(16.px)
         paddingTop(1.px)
         backgroundColor(Color("#fff"))
     }

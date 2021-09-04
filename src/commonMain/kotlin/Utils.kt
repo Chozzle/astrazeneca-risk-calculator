@@ -26,3 +26,6 @@ fun linearInterpolation(start: Effectiveness, end: Effectiveness, amount: Double
 fun Duration.weeks(value: Long) = Duration.days(value * 7)
 
 fun Duration.weeks(value: Int) = Duration.days(value * 7)
+
+val Duration.inWholeWeeks: Int
+    get() = (this.inWholeDays / 7).toInt()

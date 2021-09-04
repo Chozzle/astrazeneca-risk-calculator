@@ -157,7 +157,9 @@ fun main() {
                         minValue = (AstraZeneca.minimumTimeBetweenDoses.inWholeDays / 7).toInt(),
                         maxValue = (AstraZeneca.maximumTimeBetweenDoses.inWholeDays / 7).toInt()
                     ) {
-                        weeksBetweenVaccinationADoses = it.toInt().coerceIn(3..12)
+                        weeksBetweenVaccinationADoses = it.toInt().coerceIn(
+                            AstraZeneca.minimumTimeBetweenDoses.inWholeWeeks..AstraZeneca.maximumTimeBetweenDoses.inWholeWeeks
+                        )
                     }
                     InputField(
                         label = "Weeks until I can receive my first Pfizer dose (my best estimate)",
